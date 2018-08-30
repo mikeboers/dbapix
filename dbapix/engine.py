@@ -147,7 +147,7 @@ class Engine(object):
         out_params = []
         out_parts = []
 
-        if cls._paramstyle == '?':
+        if cls._paramstyle == 'qmark':
             next_param = lambda: '?'
         elif cls._paramstyle == 'format':
             next_param = lambda: '%s'

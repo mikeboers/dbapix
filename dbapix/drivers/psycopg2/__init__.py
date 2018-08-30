@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 import psycopg2 as pg
 import psycopg2.extensions as pgx
