@@ -75,7 +75,6 @@ class Engine(object):
             return
 
         close = close or len(self.pool) >= self.max_idle
-        status = con.get_transaction_status()
 
         if self._should_put_close(con):
             con.close()

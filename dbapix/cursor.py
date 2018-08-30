@@ -16,7 +16,7 @@ class CursorMixin(object):
 
         for key, value in sorted(data.items()):
             names.append('"%s"' % key) # TODO: Quote better.
-            placeholders.append('%s')
+            placeholders.append('{}')
             params.append(value)
 
         parts.append('(%s) VALUES (%s)' % (
@@ -25,7 +25,7 @@ class CursorMixin(object):
         ))
 
         if returning:
-            parts.append('RETURNING "%s"' % returning) # TODO: Quote better.
+            parts.append('RETURNING "{}"' % returning) # TODO: Quote better.
 
         query = ' '.join(parts)
         self.execute(query, params)
