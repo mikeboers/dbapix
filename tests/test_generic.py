@@ -14,8 +14,8 @@ class GenericTestMixin(object):
         with db.connect() as con:
 
             con.execute('''DROP TABLE IF EXISTS test_basics''')
-            con.execute('''CREATE TABLE test_basics (id {self.SERIAL} PRIMARY KEY, value INTEGER NOT NULL)'''.format(self=self))
-            con.execute('''INSERT INTO test_basics (value) VALUES (%s)''', [123])
+            con.execute('''CREATE TABLE test_basics (id {SERIAL!t} PRIMARY KEY, value INTEGER NOT NULL)''')
+            con.execute('''INSERT INTO test_basics (value) VALUES ({})''', [123])
             cur = con.execute('''SELECT * FROM test_basics''')
 
             row = list(cur)[0]
@@ -34,7 +34,7 @@ class GenericTestMixin(object):
 
         with con1:
             con1.execute('''DROP TABLE IF EXISTS test_generic_transactions''')
-            con1.execute('''CREATE TABLE test_generic_transactions (id {self.SERIAL} PRIMARY KEY, value INTEGER NOT NULL)'''.format(self=self))
+            con1.execute('''CREATE TABLE test_generic_transactions (id {SERIAL!t} PRIMARY KEY, value INTEGER NOT NULL)''')
 
         def assert_count(count):
             rows = list(con2.select('test_generic_transactions', '*'))

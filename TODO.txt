@@ -1,0 +1,2 @@
+
+- Get psycopg2 DictCursor to work with next(cur); it does not return dicts!

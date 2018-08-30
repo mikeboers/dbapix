@@ -1,6 +1,11 @@
 
 class CursorMixin(object):
 
+    def execute(self, query, params=()):
+        query, params = self._engine.format_query(query, params)
+        # print(query, params)
+        return super(CursorMixin, self).execute(query, params)
+
     def insert(self, table_name, data, returning=None):
 
         parts = ['INSERT INTO "%s"' % table_name] # TODO: Quote better.

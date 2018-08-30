@@ -1,7 +1,15 @@
+from collections import Mapping, Sequence
 import logging
 import sys
 import time
 import weakref
+
+try:
+    import _string
+    basestring = str
+except ImportError:
+    # We're only using two special methods here.
+    _string = str
 
 
 log = logging.getLogger()
@@ -20,6 +28,7 @@ class Engine(object):
             con = self.pool.pop(0)
         except IndexError:
             con = self._new_connection(timeout)
+            con._engine = self
 
         # Store where it came from so we can warn later.
         frame = sys._getframe(1)
@@ -114,6 +123,90 @@ class Engine(object):
         cur = con.cursor()
         cur.execute(*args, **kwargs)
         return self._build_context(con, cur)
+
+    _paramstyle = None
+
+    @classmethod
+    def _quote_identifier(cls, name):
+        # TODO: DO BETTER!
+        return '"{}"'.format(name)
+
+    _types = {}
+
+    @classmethod
+    def _get_type(cls, name):
+        return cls._types.get(name.lower(), name)
+
+    @classmethod
+    def format_query(cls, query, params=()):
+
+        is_named = isinstance(params, Mapping)
+        if not is_named and (isinstance(params, basestring) or not isinstance(params, Sequence)):
+            raise ValueError("Params must be mapping or non-str sequence.")
+
+        out_params = []
+        out_parts = []
+
+        if cls._paramstyle == '?':
+            next_param = lambda: '?'
+        elif cls._paramstyle == 'format':
+            next_param = lambda: '%s'
+        else:
+            raise NotImplementedError(cls._paramstyle)
+
+        next_first_index = 0
+
+        for literal, field_name, format_spec, conversion in _string._formatter_parser(query):
+
+            if literal:
+                out_parts.append(literal)
+            if field_name is None:
+                continue
+
+            # {SERIAL!t} is looked up directly.
+            if not conversion:
+                pass
+            elif conversion in ('t', ):
+                out_parts.append(cls._get_type(field_name))
+                continue
+            else:
+                raise ValueError("Unsupported convertion {!r}.".format(convertion))
+
+            first, rest = _string._formatter_field_name_split(field_name)
+
+            if not first:
+                first = next_first_index
+            
+            if not first or isinstance(first, int):
+                next_first_index = first + 1
+
+            value = params[first]
+            for is_attr, x in rest:
+                if is_attr:
+                    value = getattr(value, x)
+                else:
+                    value = value[x]
+
+            if not format_spec:
+                pass
+
+            elif format_spec.lower() in ('i', 'ident', 'identifier', 'table', 'column'):
+                out_parts.append(cls._quote_identifier(value))
+                continue
+
+            elif format_spec.lower() in ('t', 'type'):
+                out_parts.append(cls._get_type(value))
+                continue
+
+            else:
+                raise ValueError("Unsupported format spec {!r}".format(format_spec))
+
+            out_parts.append(next_param())
+            out_params.append(value)
+
+        if not is_named:
+            out_params.extend(params[next_first_index:])
+        return ''.join(out_parts), out_params
 
 
 class ConnectionContext(object):

@@ -29,6 +29,8 @@ _status_names = {
 
 class Engine(_Engine):
 
+    _paramstyle = 'format'
+    
     def __init__(self, connect_kwargs):
         super(Engine, self).__init__()
         self.connect_kwargs = connect_kwargs

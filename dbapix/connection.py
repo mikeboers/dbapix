@@ -2,6 +2,11 @@
 
 class ConnectionMixin(object):
     
+    def cursor(self, *args, **kwargs):
+        cur = super(ConnectionMixin, self).cursor(*args, **kwargs)
+        cur._engine = self._engine
+        return cur
+
     def begin(self):
         return TransactionContext(self)
 
