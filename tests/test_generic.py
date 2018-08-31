@@ -31,21 +31,30 @@ class GenericTestMixin(object):
 
             cur = con.execute('''SELECT * FROM test_basics''')
             row = list(cur)[0]
+
+            # The tuple/list-ness is not consistent between drivers so far.
+            print('row type', type(row))
+            print('row is tuple', isinstance(row, tuple))
+            print('row is list', isinstance(row, list))
+
             self.assertEqual(tuple(row), (1, 123))
             self.assertEqual(row['id'], 1)
             self.assertEqual(row['value'], 123)
 
+            self.assertIn('id', row)
+            self.assertNotIn('foo', row)
+
+            self.assertEqual(row.copy(), dict(id=1, value=123))
+
+            # Make sure keys exist via `next` as well, since that doesn't
+            # with psycopg2's DictCursor.
             cur = con.execute('''SELECT * FROM test_basics''')
             row = next(cur)
             self.assertEqual(tuple(row), (1, 123))
             self.assertEqual(row['id'], 1)
-            self.assertEqual(row['value'], 123)
-            #self.assertEqual(dict(row), dict(id=1, value=123))
 
 
     def test_transactions(self):
-
-        #return
 
         db = self.create_engine()
 
@@ -53,11 +62,8 @@ class GenericTestMixin(object):
         con2 = db.get_connection()
 
         with con1:
-            print('here1')
             con1.execute('''DROP TABLE IF EXISTS test_generic_transactions''')
-            print('here2')
             con1.execute('''CREATE TABLE test_generic_transactions (id {SERIAL!t} PRIMARY KEY, value INTEGER NOT NULL)''')
-            print('here3')
 
         def assert_count(count):
             rows = list(con2.select('test_generic_transactions', '*'))
@@ -65,11 +71,8 @@ class GenericTestMixin(object):
 
 
         # Implicit transactions.
-        print('here4')
         con1.insert('test_generic_transactions', dict(value=123))
-        print('here5')
         assert_count(0)
-        print('here6')
 
         con1.commit()
         assert_count(1)

@@ -9,6 +9,7 @@ try:
     str_formatter_parser = _string.formatter_parser
     str_formatter_field_name_split = _string.formatter_field_name_split
     basestring = str
+
 except ImportError:
     # We're only using two special methods here.
     str_formatter_parser = str._formatter_parser
@@ -32,7 +33,7 @@ class Engine(object):
 
     def __del__(self):
         self.close()
-    
+
     def get_connection(self, timeout=None, **kwargs):
         
         try:
@@ -58,7 +59,7 @@ class Engine(object):
         delay = 0.1
         while True:
             try:
-                return self._connect()
+                return self._connect(timeout)
             except Exception as e:
                 if timeout is None:
                     raise
@@ -69,7 +70,7 @@ class Engine(object):
             time.sleep(delay)
             delay *= 1.41
 
-    def _connect(self):
+    def _connect(self, timeout):
         raise NotImplementedError()
 
     def _connect_exc_is_timeout(self, e):
@@ -140,8 +141,8 @@ class Engine(object):
 
     @classmethod
     def _quote_identifier(cls, name):
-        # TODO: DO BETTER!
-        return '"{}"'.format(name)
+        # This is valid for sqlite3 and psycopg2.
+        return '"{}"'.format(name.replace('"', '""'))
 
     _types = {}
 
@@ -175,9 +176,13 @@ class Engine(object):
             if field_name is None:
                 continue
 
-            # {SERIAL!t} is looked up directly.
+            # {SERIAL!t} and {name!i} are taken directly.
+            # This might not be a great idea...
             if not conversion:
                 pass
+            elif conversion in ('i', ):
+                out_parts.append(cls._quote_identifier(field_name))
+                continue
             elif conversion in ('t', ):
                 out_parts.append(cls._get_type(field_name))
                 continue

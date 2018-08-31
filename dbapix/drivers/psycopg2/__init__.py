@@ -46,7 +46,7 @@ class Engine(_Engine):
             autocommit=autocommit
         )
 
-    def _connect(self):
+    def _connect(self, timeout):
         return pg.connect(
             connection_factory=Connection,
             cursor_factory=Cursor,
@@ -80,7 +80,7 @@ class Cursor(_CursorMixin, pg.extras.DictCursor):
     # The DictCursor does not catch `next(cur)`, but instead implements all
     # of this in the fetch* methods. So us doing this here might cause a bunch
     # of redundant work. If we feel like it, we can re-implement the whole thing.
-    
+
     if six.PY2:
 
         def __next__(self):
