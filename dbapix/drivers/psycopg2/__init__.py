@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import psycopg2 as pg
 import psycopg2.extensions as pgx
 import psycopg2.extras
+import six
 
 from dbapix.connection import ConnectionMixin as _ConnectionMixin
 from dbapix.cursor import CursorMixin as _CursorMixin
@@ -76,7 +77,34 @@ class Connection(_ConnectionMixin, pgx.connection):
 
 class Cursor(_CursorMixin, pg.extras.DictCursor):
 
-    pass
+    # The DictCursor does not catch `next(cur)`, but instead implements all
+    # of this in the fetch* methods. So us doing this here might cause a bunch
+    # of redundant work. If we feel like it, we can re-implement the whole thing.
+    
+    if six.PY2:
 
+        def __next__(self):
+            # This gets us `next(cur)`
+            if self._prefetch:
+                res = super(Cursor, self).next()
+            if self._query_executed:
+                self._build_index()
+            if not self._prefetch:
+                res = super(Cursor, self).next()
+            return res
+
+        next = __next__
+
+    else:
+
+        def __next__(self):
+            # This gets us `next(cur)`
+            if self._prefetch:
+                res = super(Cursor, self).__next__()
+            if self._query_executed:
+                self._build_index()
+            if not self._prefetch:
+                res = super(Cursor, self).__next__()
+            return res
 
 

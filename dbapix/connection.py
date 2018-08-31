@@ -5,14 +5,14 @@ class ConnectionMixin(object):
     def __init__(self, *args, **kwargs):
         super(ConnectionMixin, self).__init__(*args, **kwargs)
         self._autocommit = None
-    
+
     def cursor(self, *args, **kwargs):
         cur = super(ConnectionMixin, self).cursor(*args, **kwargs)
         cur._engine = self._engine
         return cur
 
     def _can_disable_autocommit(self):
-        return True
+        raise NotImplementedError()
 
     def begin(self):
         

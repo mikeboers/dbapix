@@ -28,21 +28,31 @@ class Connection(_ConnectionMixin, sqlite3.Connection):
         super(Connection, self).__init__(*args, **kwargs)
         self.row_factory = sqlite3.Row # Dict-ish behaviour.
         self._isolation_level = None
+        self._closed = False
 
     @property
     def closed(self):
-        return False
+        return self._closed
+
+    def close(self):
+        super(Connection, self).close()
+        self._closed = True
+
+    def _can_disable_autocommit(self):
+        # There really isn't a way we can tell, so... yeah.
+        return True
 
     def cursor(self):
         return super(Connection, self).cursor(factory=Cursor)
 
     @property
     def autocommit(self):
+        # In Python's sqlite3 autocommit is tied to the isolation level.
         return self.isolation_level is None
 
     @autocommit.setter
     def autocommit(self, value):
-        
+
         if value and self.isolation_level is not None:
             self._isolation_level = self.isolation_level
             self.isolation_level = None
@@ -60,4 +70,5 @@ class Cursor(_CursorMixin, sqlite3.Cursor):
 
     def __exit__(self, *args):
         pass
+
 

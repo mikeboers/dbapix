@@ -10,7 +10,7 @@ class GenericTestMixin(object):
     def tearDown(self):
         for db in self.engines:
             db.close()
-    
+
     def create_engine(self):
         db = self._create_engine()
         self.engines.append(db)
@@ -28,15 +28,20 @@ class GenericTestMixin(object):
             con.execute('''DROP TABLE IF EXISTS test_basics''')
             con.execute('''CREATE TABLE test_basics (id {SERIAL PRIMARY KEY!t}, value INTEGER NOT NULL)''')
             con.execute('''INSERT INTO test_basics (value) VALUES ({})''', [123])
-            cur = con.execute('''SELECT * FROM test_basics''')
 
-            id_, value = row = list(cur)[0]
-            self.assertEqual(id_, 1)
-            self.assertEqual(value, 123)
+            cur = con.execute('''SELECT * FROM test_basics''')
+            row = list(cur)[0]
+            self.assertEqual(tuple(row), (1, 123))
             self.assertEqual(row['id'], 1)
             self.assertEqual(row['value'], 123)
 
-            # TODO: Get DictCursor to work with next(cur) as well!
+            cur = con.execute('''SELECT * FROM test_basics''')
+            row = next(cur)
+            self.assertEqual(tuple(row), (1, 123))
+            self.assertEqual(row['id'], 1)
+            self.assertEqual(row['value'], 123)
+            #self.assertEqual(dict(row), dict(id=1, value=123))
+
 
     def test_transactions(self):
 
