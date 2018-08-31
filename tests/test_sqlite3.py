@@ -10,6 +10,10 @@ def create_sqlite_engine():
 
 class TestSQLite3Generics(GenericTestMixin, TestCase):
 
-    def create_engine(self):
+    def _create_engine(self):
         return create_sqlite_engine()
 
+
+class TestSQLite3(TestCase):
+
+    pass

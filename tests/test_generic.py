@@ -4,7 +4,19 @@ from . import *
 
 class GenericTestMixin(object):
 
+    def setUp(self):
+        self.engines = []
+
+    def tearDown(self):
+        for db in self.engines:
+            db.close()
+    
     def create_engine(self):
+        db = self._create_engine()
+        self.engines.append(db)
+        return db
+
+    def _create_engine(self):
         raise NotImplementedError()
 
     def test_basics(self):
@@ -28,14 +40,19 @@ class GenericTestMixin(object):
 
     def test_transactions(self):
 
+        #return
+
         db = self.create_engine()
 
         con1 = db.get_connection()
         con2 = db.get_connection()
 
         with con1:
+            print('here1')
             con1.execute('''DROP TABLE IF EXISTS test_generic_transactions''')
+            print('here2')
             con1.execute('''CREATE TABLE test_generic_transactions (id {SERIAL!t} PRIMARY KEY, value INTEGER NOT NULL)''')
+            print('here3')
 
         def assert_count(count):
             rows = list(con2.select('test_generic_transactions', '*'))
@@ -43,8 +60,11 @@ class GenericTestMixin(object):
 
 
         # Implicit transactions.
+        print('here4')
         con1.insert('test_generic_transactions', dict(value=123))
+        print('here5')
         assert_count(0)
+        print('here6')
 
         con1.commit()
         assert_count(1)

@@ -6,11 +6,13 @@ import weakref
 
 try:
     import _string
+    str_formatter_parser = _string.formatter_parser
+    str_formatter_field_name_split = _string.formatter_field_name_split
     basestring = str
 except ImportError:
     # We're only using two special methods here.
-    _string = str
-
+    str_formatter_parser = str._formatter_parser
+    str_formatter_field_name_split = str._formatter_field_name_split
 
 log = logging.getLogger()
 
@@ -20,8 +22,17 @@ class Engine(object):
     def __init__(self):
         self.pool = []
         self.max_idle = 2
+        self._checked_out = []
         self._context_refs = {}
 
+    def close(self):
+        for collection in (self.pool, self._checked_out):
+            while collection:
+                collection.pop().close()
+
+    def __del__(self):
+        self.close()
+    
     def get_connection(self, timeout=None, **kwargs):
         
         try:
@@ -35,6 +46,7 @@ class Engine(object):
         con._origin = (frame.f_code.co_filename, frame.f_lineno)
 
         self._prepare_connection(con, **kwargs)
+        self._checked_out.append(con)
 
         return con
 
@@ -95,6 +107,7 @@ class Engine(object):
             return
 
         if con not in self.pool:
+            self._checked_out.remove(con)
             self.pool.append(con)
 
     def _build_context(self, con, obj):
@@ -155,7 +168,7 @@ class Engine(object):
 
         next_first_index = 0
 
-        for literal, field_name, format_spec, conversion in _string._formatter_parser(query):
+        for literal, field_name, format_spec, conversion in str_formatter_parser(query):
 
             if literal:
                 out_parts.append(literal)
@@ -171,7 +184,7 @@ class Engine(object):
             else:
                 raise ValueError("Unsupported convertion {!r}.".format(convertion))
 
-            first, rest = _string._formatter_field_name_split(field_name)
+            first, rest = str_formatter_field_name_split(field_name)
 
             if not first:
                 first = next_first_index

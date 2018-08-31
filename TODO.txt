@@ -1,2 +1,11 @@
 
 - Get psycopg2 DictCursor to work with next(cur); it does not return dicts!
+
+
+
+Documentation
+=============
+
+- In non-autocommit mode, transactions start implicitly, not when you enter
+  the context. con.begin() just puts us back into non-autocommit, and doesn't
+  start a transaction either.

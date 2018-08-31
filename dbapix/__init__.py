@@ -1,7 +1,7 @@
 
 
 def get_engine_class(driver):
-    mod = __import__('dbapix.drivers.{}'.format(driver), fromlist=['.'])
+    mod = __import__('dbapix.drivers.{}'.format(driver), fromlist=[''])
     return getattr(mod, 'Engine')
 
 

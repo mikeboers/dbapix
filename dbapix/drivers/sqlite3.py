@@ -19,9 +19,15 @@ class Engine(_Engine):
     def _connect(self):
         return sqlite3.connect(self.path,
             factory=Connection,
+            timeout=0,
         )
 
 class Connection(_ConnectionMixin, sqlite3.Connection):
+
+    def __init__(self, *args, **kwargs):
+        super(Connection, self).__init__(*args, **kwargs)
+        self.row_factory = sqlite3.Row # Dict-ish behaviour.
+        self._isolation_level = None
 
     @property
     def closed(self):
@@ -29,6 +35,22 @@ class Connection(_ConnectionMixin, sqlite3.Connection):
 
     def cursor(self):
         return super(Connection, self).cursor(factory=Cursor)
+
+    @property
+    def autocommit(self):
+        return self.isolation_level is None
+
+    @autocommit.setter
+    def autocommit(self, value):
+        
+        if value and self.isolation_level is not None:
+            self._isolation_level = self.isolation_level
+            self.isolation_level = None
+
+        elif not value and self.isolation_level is None:
+            self.isolation_level = self._isolation_level or ''
+            self._isolation_level = None
+    
 
 
 class Cursor(_CursorMixin, sqlite3.Cursor):

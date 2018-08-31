@@ -69,42 +69,8 @@ class Engine(_Engine):
 
 class Connection(_ConnectionMixin, pgx.connection):
 
-    def __init__(self, *args, **kwargs):
-        super(Connection, self).__init__(*args, **kwargs)
-        self._autocommit = None
-
-    def begin(self):
-        
-        # Optimize to use the included methods if we can. We will drop back
-        # into autocommit mode later.
-        if self.autocommit and self.get_transaction_status() == pgx.TRANSACTION_STATUS_IDLE:
-            self._autocommit = True
-            self.autocommit = False
-
-        if self.autocommit:
-            self.cursor().execute('BEGIN')
-
-        # The psycopg2 Connection.__enter__ doesn't actually do anything.
-        # We rely upon implicit start of transactions.
-
-        return super(Connection, self).begin()
-
-    def _end(self):
-        if self._autocommit is not None:
-            self.autocommit = self._autocommit
-            self._autocommit = None
-
-    def commit(self):
-        if self.autocommit:
-            raise RuntimeError("Connection is in autocommit mode.")
-        super(Connection, self).commit()
-        self._end()
-
-    def rollback(self):
-        if self.autocommit:
-            raise RuntimeError("Connection is in autocommit mode.")
-        super(Connection, self).rollback()
-        self._end()
+    def _can_disable_autocommit(self):
+        return self.get_transaction_status() == pgx.TRANSACTION_STATUS_IDLE
 
 
 
