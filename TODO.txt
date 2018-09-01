@@ -1,4 +1,58 @@
 
+Query builders.
+
+    dbx.select('column', dbx.alias('count(1)', 'count'), from_='table').join('table2', on='some condition').where(dbx.or_('foo = {}', 1)).group_by('bar', 'desc')
+    dbx.upsert('table', dict(foo='new_value'), where='id = blah')
+    dbx.bind('a = {}', 'apple') for generic use around the place
+
+SQL literal should work everywhere.
+
+    dbx.SQL('literal SQL')
+
+Datetime and other parsing should be on by default for SQLite stuff.
+
+
+Go straight for f-string-like formatting?
+
+    {foo[bar]} -> {foo['bar']}
+
+    Add more syntax for how to evalute the spec:
+
+        {x!foo} overloading !
+        {x@foo}
+        {x`foo} looks somewhat like r'whatever'
+        {x('foo')} direct, and you can add your own
+
+    We can still support `{}`, but can we support `{0}` ??
+        We could turn it into `{_0}` or something
+
+    f('insert into {table!l} (value) VALUES ({a + b})', table=foo, a=1, b=2) could return a QueryPart
+      with pattern 'insert into {table!l} (value) VALUES ({_0})' and bind dict(_0=3)
+      This then would work with a slightly extended format-spec.
+
+Replace format conversions with extended specs?
+    
+    {FOO!t} interprets "FOO" as a type... change this:
+
+        Option 1:
+            {FOO:rt}; r -> "raw" spec
+            {'FOO':et}; e -> "literal_eval" spec
+            {'FOO':Et}; E -> actually eval the spec
+
+        Option 2: {+FOO:t}
+            Other characters could be '@', '=', etc.
+
+        Option 3: {'foo':t}
+            It looks like a string, so take it as one.
+
+
+    {fieldname:literal} -> treat as SQL literal
+    {fieldname!l:x}
+
+
+Pull in con.tables(), con.columns(table), etc., from mmtransfer.
+
+
 Documentation
 =============
 
