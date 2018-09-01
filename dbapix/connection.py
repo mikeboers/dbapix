@@ -47,10 +47,10 @@ class ConnectionMixin(object):
         super(ConnectionMixin, self).rollback()
         self._end()
 
-    def execute(self, *args, **kwargs):
+    def execute(self, query, params=None):
         # No cursor context here since it needs to be read.
         cur = self.cursor()
-        cur.execute(*args, **kwargs)
+        cur.execute(query, params, 1)
         return cur
 
     def select(self, *args, **kwargs):

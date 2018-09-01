@@ -1,3 +1,4 @@
+from .query import bind
 
 
 def get_engine_class(driver):

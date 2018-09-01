@@ -1,25 +1,12 @@
-from collections import Mapping, Sequence
 import logging
 import sys
 import time
 import weakref
 import re
 
-try:
-    import _string
-    str_formatter_parser = _string.formatter_parser
-    str_formatter_field_name_split = _string.formatter_field_name_split
-    basestring = str
-
-except ImportError:
-    # We're only using two special methods here.
-    str_formatter_parser = str._formatter_parser
-    str_formatter_field_name_split = str._formatter_field_name_split
-
 log = logging.getLogger()
 
-
-py_identifier_re = re.compile(r'^[_a-zA-Z]\w*$')
+from .query import bind as bind_query
 
 
 class Engine(object):
@@ -135,10 +122,10 @@ class Engine(object):
         cur = con.cursor()
         return self._build_context(con, cur)
 
-    def execute(self, *args, **kwargs):
+    def execute(self, query, params=None):
         con = self.get_connection()
         cur = con.cursor()
-        cur.execute(*args, **kwargs)
+        cur.execute(query, params, 1)
         return self._build_context(con, cur)
 
     _paramstyle = None
@@ -151,97 +138,8 @@ class Engine(object):
     _types = {}
 
     @classmethod
-    def _get_type(cls, name):
+    def _adapt_type(cls, name):
         return cls._types.get(name.lower(), name)
-
-    @classmethod
-    def format_query(cls, query, params=None, _frame_depth=1):
-
-        is_magic = params is None
-        is_named = isinstance(params, Mapping)
-        is_indexed = not (is_magic or is_named)
-        if is_indexed and (isinstance(params, basestring) or not isinstance(params, Sequence)):
-            raise ValueError("Params must be None, mapping, or non-str sequence.")
-
-        out_params = []
-        out_parts = []
-
-        if cls._paramstyle == 'qmark':
-            next_param = lambda: '?'
-        elif cls._paramstyle == 'format':
-            next_param = lambda: '%s'
-        else:
-            raise NotImplementedError(cls._paramstyle)
-
-        next_index = 0
-
-        for literal_prefix, field_spec, format_spec, conversion in str_formatter_parser(query):
-
-            if literal_prefix:
-                out_parts.append(literal_prefix)
-            if field_spec is None:
-                continue
-
-            # {SERIAL!t} and {name!i} are taken directly.
-            # This might not be a great idea...
-            if not conversion:
-                pass
-            elif conversion in ('i', ):
-                out_parts.append(cls._quote_identifier(field_spec))
-                continue
-            elif conversion in ('t', ):
-                out_parts.append(cls._get_type(field_spec))
-                continue
-            else:
-                raise ValueError("Unsupported convertion {!r}.".format(convertion))
-
-            if field_spec:
-                is_index = field_spec.isdigit()
-                is_simple = is_index or py_identifier_re.match(field_spec)
-                if is_index:
-                    field_spec = int(field_spec)
-            else:
-                field_spec = next_index
-                is_index = is_simple = True
-
-            if is_index:
-                next_index = field_spec + 1
-                if not is_indexed:
-                    raise ValueError("Cannot use indexes to lookup into non-indexed params.")
-
-            if params is None:
-                # Lets finally load the "magic".
-                frame = sys._getframe(_frame_depth)
-                params = dict(frame.f_globals)
-                params.update(frame.f_locals)
-
-            if is_simple:
-                # Bypass the magic as much as possible.
-                value = params[field_spec]
-            else:
-                #print(is_index, is_simple, repr(field_spec))
-                value = eval(field_spec, params, {})
-
-            if not format_spec:
-                pass
-
-            elif format_spec.lower() in ('i', 'ident', 'identifier', 'table', 'column'):
-                out_parts.append(cls._quote_identifier(value))
-                continue
-
-            elif format_spec.lower() in ('t', 'type'):
-                out_parts.append(cls._get_type(value))
-                continue
-
-            else:
-                raise ValueError("Unsupported format spec {!r}".format(format_spec))
-
-            out_parts.append(next_param())
-            out_params.append(value)
-
-        if is_indexed:
-            out_params.extend(params[next_index:])
-        return ''.join(out_parts), out_params
 
 
 class ConnectionContext(object):

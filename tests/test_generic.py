@@ -54,6 +54,23 @@ class GenericTestMixin(object):
             self.assertEqual(row['id'], 1)
 
 
+    def test_auto_binding(self):
+
+        db = self.create_engine()
+        with db.connect() as con:
+
+            table = 'test_auto_binding'
+            foo = 123
+            bar = 234
+
+            con.execute('''DROP TABLE IF EXISTS {table:i}''')
+            con.execute('''CREATE TABLE {table:i} (id {SERIAL PRIMARY KEY!t}, value INTEGER NOT NULL)''')
+
+            con.execute('''INSERT INTO {table:i}(value) VALUES ({foo})''')
+            row = next(con.execute('''SELECT value FROM {table:i}'''))
+            self.assertEqual(row[0], foo)
+
+
     def test_transactions(self):
 
         db = self.create_engine()

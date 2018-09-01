@@ -1,8 +1,12 @@
 
+from .query import bind
+
+
 class CursorMixin(object):
 
-    def execute(self, query, params=()):
-        query, params = self._engine.format_query(query, params)
+    def execute(self, query, params=None, _stack_depth=0):
+        bound = bind(query, params, _stack_depth + 1)
+        query, params = bound(self._engine)
         # print(query, params)
         return super(CursorMixin, self).execute(query, params)
 
