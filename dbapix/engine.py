@@ -3,6 +3,7 @@ import logging
 import sys
 import time
 import weakref
+import re
 
 try:
     import _string
@@ -16,6 +17,9 @@ except ImportError:
     str_formatter_field_name_split = str._formatter_field_name_split
 
 log = logging.getLogger()
+
+
+py_identifier_re = re.compile(r'^[_a-zA-Z]\w*$')
 
 
 class Engine(object):
@@ -151,11 +155,13 @@ class Engine(object):
         return cls._types.get(name.lower(), name)
 
     @classmethod
-    def format_query(cls, query, params=()):
+    def format_query(cls, query, params=None, _frame_depth=1):
 
+        is_magic = params is None
         is_named = isinstance(params, Mapping)
-        if not is_named and (isinstance(params, basestring) or not isinstance(params, Sequence)):
-            raise ValueError("Params must be mapping or non-str sequence.")
+        is_indexed = not (is_magic or is_named)
+        if is_indexed and (isinstance(params, basestring) or not isinstance(params, Sequence)):
+            raise ValueError("Params must be None, mapping, or non-str sequence.")
 
         out_params = []
         out_parts = []
@@ -167,13 +173,13 @@ class Engine(object):
         else:
             raise NotImplementedError(cls._paramstyle)
 
-        next_first_index = 0
+        next_index = 0
 
-        for literal, field_name, format_spec, conversion in str_formatter_parser(query):
+        for literal_prefix, field_spec, format_spec, conversion in str_formatter_parser(query):
 
-            if literal:
-                out_parts.append(literal)
-            if field_name is None:
+            if literal_prefix:
+                out_parts.append(literal_prefix)
+            if field_spec is None:
                 continue
 
             # {SERIAL!t} and {name!i} are taken directly.
@@ -181,28 +187,40 @@ class Engine(object):
             if not conversion:
                 pass
             elif conversion in ('i', ):
-                out_parts.append(cls._quote_identifier(field_name))
+                out_parts.append(cls._quote_identifier(field_spec))
                 continue
             elif conversion in ('t', ):
-                out_parts.append(cls._get_type(field_name))
+                out_parts.append(cls._get_type(field_spec))
                 continue
             else:
                 raise ValueError("Unsupported convertion {!r}.".format(convertion))
 
-            first, rest = str_formatter_field_name_split(field_name)
+            if field_spec:
+                is_index = field_spec.isdigit()
+                is_simple = is_index or py_identifier_re.match(field_spec)
+                if is_index:
+                    field_spec = int(field_spec)
+            else:
+                field_spec = next_index
+                is_index = is_simple = True
 
-            if not first:
-                first = next_first_index
-            
-            if not first or isinstance(first, int):
-                next_first_index = first + 1
+            if is_index:
+                next_index = field_spec + 1
+                if not is_indexed:
+                    raise ValueError("Cannot use indexes to lookup into non-indexed params.")
 
-            value = params[first]
-            for is_attr, x in rest:
-                if is_attr:
-                    value = getattr(value, x)
-                else:
-                    value = value[x]
+            if params is None:
+                # Lets finally load the "magic".
+                frame = sys._getframe(_frame_depth)
+                params = dict(frame.f_globals)
+                params.update(frame.f_locals)
+
+            if is_simple:
+                # Bypass the magic as much as possible.
+                value = params[field_spec]
+            else:
+                #print(is_index, is_simple, repr(field_spec))
+                value = eval(field_spec, params, {})
 
             if not format_spec:
                 pass
@@ -221,8 +239,8 @@ class Engine(object):
             out_parts.append(next_param())
             out_params.append(value)
 
-        if not is_named:
-            out_params.extend(params[next_first_index:])
+        if is_indexed:
+            out_params.extend(params[next_index:])
         return ''.join(out_parts), out_params
 
 

@@ -4,6 +4,8 @@ from dbapix.drivers.psycopg2 import Engine as Postgres
 from dbapix.drivers.sqlite3 import Engine as SQLite
 
 
+global_bar = 345
+
 class TestFormatQuery(TestCase):
 
     def test_format_query(self):
@@ -40,3 +42,21 @@ class TestFormatQuery(TestCase):
         self.assertEqual(q, 'SELECT ?')
         self.assertEqual(p, [1])
 
+
+        # F-string like locations.
+
+        foo = 234
+        q, p = SQLite.format_query('SELECT {foo}, {global_bar}')
+        self.assertEqual(q, 'SELECT ?, ?')
+        self.assertEqual(p, [234, 345])
+
+        # F-string like evals.
+        q, p = SQLite.format_query('SELECT {foo + global_bar}')
+        self.assertEqual(q, 'SELECT ?')
+        self.assertEqual(p, [234 + 345])
+
+        foodict=dict(foo=456)
+        q, p = SQLite.format_query('SELECT {foodict["foo"]}')
+        self.assertEqual(q, 'SELECT ?')
+        self.assertEqual(p, [456])
+        
