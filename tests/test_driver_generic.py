@@ -75,8 +75,11 @@ class GenericTestMixin(object):
 
         db = self.create_engine()
 
+        # con2 must not start transactions because MySQL appears to have a
+        # stricter isolation level than Postgres and SQLite do by default,
+        # and after the first select it will not return other data.
         con1 = db.get_connection()
-        con2 = db.get_connection()
+        con2 = db.get_connection(autocommit=True)
 
         with con1:
             con1.execute('''DROP TABLE IF EXISTS test_generic_transactions''')

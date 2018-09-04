@@ -12,14 +12,14 @@ class CursorMixin(object):
 
     def insert(self, table_name, data, returning=None):
 
-        parts = ['INSERT INTO "%s"' % table_name] # TODO: Quote better.
+        parts = ['INSERT INTO %s' % self._engine._quote_identifier(table_name)]
 
         names = []
         placeholders = []
         params = []
 
         for key, value in sorted(data.items()):
-            names.append('"%s"' % key) # TODO: Quote better.
+            names.append(self._engine._quote_identifier(key)) # TODO: Quote better.
             placeholders.append('{}')
             params.append(value)
 

@@ -1,12 +1,12 @@
 import os
 
 from . import *
-from .test_generic import GenericTestMixin
+from .test_driver_generic import GenericTestMixin
 
 
 def create_pg_engine():
     return create_engine('psycopg2', dict(
-        host=    os.environ.get('DBAPIX_TEST_PSYCOPG2_HOST'    , 'localhost'),
+        host=    os.environ.get('DBAPIX_TEST_PSYCOPG2_HOST'    , 'su01.mm'),
         database=os.environ.get('DBAPIX_TEST_PSYCOPG2_DATABASE', 'sandbox'),
     ))
 

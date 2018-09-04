@@ -1,7 +1,7 @@
 import os
 
 from . import *
-from .test_generic import GenericTestMixin
+from .test_driver_generic import GenericTestMixin
 
 
 def create_sqlite_engine():
