@@ -160,7 +160,7 @@ class ConnectionContext(object):
         if self._con is self._obj:
             return '<ConnectionContext con={}>'.format(self._con)
         else:
-            return '<ConnectionContext con={} obj={}>'.format(self._con, self.obj)
+            return '<ConnectionContext con={} obj={}>'.format(self._con, self._obj)
 
     def put_connection(self, *args, **kwargs):
         if self._con is not None:
