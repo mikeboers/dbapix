@@ -38,16 +38,26 @@
 <dl class="function">
 <dt id="dbapix.create_engine">
 <code class="descclassname">dbapix.</code><code class="descname">create_engine</code><span class="sig-paren">(</span><em>driver</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix.html#create_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.create_engine" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build an <a class="reference internal" href="engine.html#dbapix.engine.Engine" title="dbapix.engine.Engine"><code class="xref py py-class docutils literal notranslate"><span class="pre">Engine</span></code></a> for the given driver.</p>
+<dd><p>Build an <a class="reference internal" href="engine.html#dbapix.engine.Engine" title="dbapix.engine.Engine"><code class="xref py py-class docutils literal notranslate"><span class="pre">Engine</span></code></a> for the given driver:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;postgres&#39;</span><span class="p">,</span>
+    <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+    <span class="n">database</span><span class="o">=</span><span class="s1">&#39;example&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>driver</strong> (<em>str</em>) – The name of the database driver to use.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>driver</strong> (<em>str</em>) – The name of the database driver to use</td>
 </tr>
 </tbody>
 </table>
-<p>All other <code class="docutils literal notranslate"><span class="pre">*args</span></code> and <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> are passed to the engine constructor.</p>
+<p>The name can be either a specific implementation (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;psycopg2&quot;</span></code>), or
+it can be generic. Generic names will be resolved to the first availible
+specific implementation (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;mysql&quot;</span></code> resolves to the first of
+<code class="docutils literal notranslate"><span class="pre">&quot;mysqldb&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;pymysql&quot;</span></code> to exist.)</p>
+<p>All <code class="docutils literal notranslate"><span class="pre">args</span></code> and <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> are passed to the engine constructor.</p>
 </dd></dl>
 
 </div>

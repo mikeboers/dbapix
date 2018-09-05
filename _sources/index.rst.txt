@@ -5,9 +5,9 @@ dbapix
 
 We currently wrap:
 
-- ``psycopg2`` `(docs) <http://initd.org/psycopg/>`_
-- ``sqlite3`` `(docs) <https://docs.python.org/3.7/library/sqlite3.html>`_
-- ``pymysql`` `(GitHub) <https://github.com/PyMySQL/PyMySQL>`_
+- ``"postgres"`` via `psycopg2 <http://initd.org/psycopg/>`_
+- ``"sqlite"`` via `sqlite3 <https://docs.python.org/3.7/library/sqlite3.html>`_
+- ``"mysql"`` via `PyMySQL <https://github.com/PyMySQL/PyMySQL>`_ or `MySQL-Python <https://pypi.org/project/MySQL-python/>`_
 
 The first goal is to provide a :class:`pool <.Engine>` of normalized
 DB-API 2.0 :class:`connections <.Connection>` and :class:`cursors <.Cursor>`,
@@ -29,7 +29,7 @@ Example
     from dbapix import create_engine
 
     # Create an engine with the name of the driver.
-    engine = create_engine('psycopg2', dict(
+    engine = create_engine('postgres', dict(
         host='localhost',
         database='example',
     ))
@@ -41,7 +41,7 @@ Example
 
         # If not provided explicitly, parameters are pulled
         # from the calling scope for an f-string-like experience
-        # where Bobby Tables won't cause trouble.
+        # but where Bobby Tables won't cause trouble.
         cur = con.execute('''SELECT bar FROM foo WHERE id = {foo_id}''')
 
         for row in cur:

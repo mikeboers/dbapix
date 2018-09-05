@@ -35,17 +35,54 @@
 <span></span><span class="kn">from</span> <span class="nn">.query</span> <span class="k">import</span> <span class="n">bind</span>
 
 
+<span class="n">generic_implementations</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">mariadb</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mysqldb&#39;</span><span class="p">,</span> <span class="s1">&#39;pymysql&#39;</span><span class="p">],</span>
+    <span class="n">mysql</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mysqldb&#39;</span><span class="p">,</span> <span class="s1">&#39;pymysql&#39;</span><span class="p">],</span>
+    <span class="n">postgres</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;psycopg2&#39;</span><span class="p">],</span>
+    <span class="n">postgresql</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;psycopg2&#39;</span><span class="p">],</span>
+    <span class="n">sqlite</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;sqlite3&#39;</span><span class="p">],</span>
+<span class="p">)</span>
+
+
 <span class="k">def</span> <span class="nf">get_engine_class</span><span class="p">(</span><span class="n">driver</span><span class="p">):</span>
-    <span class="n">mod</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="s1">&#39;dbapix.drivers.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">driver</span><span class="p">),</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+    <span class="n">driver</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="n">specifics</span> <span class="o">=</span> <span class="n">generic_implementations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">specifics</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">real_driver</span> <span class="ow">in</span> <span class="n">specifics</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">get_engine_class</span><span class="p">(</span><span class="n">real_driver</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;None of </span><span class="si">{}</span><span class="s2"> availible for </span><span class="si">{!r}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">specifics</span><span class="p">,</span> <span class="n">driver</span><span class="p">))</span>
+
+    <span class="n">mod_name</span> <span class="o">=</span> <span class="s1">&#39;dbapix.drivers.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">driver</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">mod_name</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">mod_name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown driver </span><span class="si">{!r}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">driver</span><span class="p">))</span>
+
     <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;Engine&#39;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="create_engine"><a class="viewcode-back" href="../api/core.html#dbapix.create_engine">[docs]</a><span class="k">def</span> <span class="nf">create_engine</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Build an :class:`.Engine` for the given driver.</span>
+    <span class="sd">&quot;&quot;&quot;Build an :class:`.Engine` for the given driver::</span>
 
-<span class="sd">    :param str driver: The name of the database driver to use.</span>
+<span class="sd">        engine = create_engine(&#39;postgres&#39;,</span>
+<span class="sd">            host=&#39;localhost&#39;,</span>
+<span class="sd">            database=&#39;example&#39;,</span>
+<span class="sd">        )</span>
 
-<span class="sd">    All other ``*args`` and ``**kwargs`` are passed to the engine constructor.</span>
+<span class="sd">    :param str driver: The name of the database driver to use</span>
+
+<span class="sd">    The name can be either a specific implementation (e.g. ``&quot;psycopg2&quot;``), or</span>
+<span class="sd">    it can be generic. Generic names will be resolved to the first availible</span>
+<span class="sd">    specific implementation (e.g. ``&quot;mysql&quot;`` resolves to the first of</span>
+<span class="sd">    ``&quot;mysqldb&quot;`` or ``&quot;pymysql&quot;`` to exist.)</span>
+
+<span class="sd">    All ``args`` and ``kwargs`` are passed to the engine constructor.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     

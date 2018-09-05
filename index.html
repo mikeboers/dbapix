@@ -37,9 +37,9 @@
 <p><strong>dbapix</strong> is a unification of, and extension to, several DB-API 2.0 drivers.</p>
 <p>We currently wrap:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">psycopg2</span></code> <a class="reference external" href="http://initd.org/psycopg/">(docs)</a></li>
-<li><code class="docutils literal notranslate"><span class="pre">sqlite3</span></code> <a class="reference external" href="https://docs.python.org/3.7/library/sqlite3.html">(docs)</a></li>
-<li><code class="docutils literal notranslate"><span class="pre">pymysql</span></code> <a class="reference external" href="https://github.com/PyMySQL/PyMySQL">(GitHub)</a></li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;postgres&quot;</span></code> via <a class="reference external" href="http://initd.org/psycopg/">psycopg2</a></li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;sqlite&quot;</span></code> via <a class="reference external" href="https://docs.python.org/3.7/library/sqlite3.html">sqlite3</a></li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;mysql&quot;</span></code> via <a class="reference external" href="https://github.com/PyMySQL/PyMySQL">PyMySQL</a> or <a class="reference external" href="https://pypi.org/project/MySQL-python/">MySQL-Python</a></li>
 </ul>
 <p>The first goal is to provide a <a class="reference internal" href="api/engine.html#dbapix.engine.Engine" title="dbapix.engine.Engine"><code class="xref py py-class docutils literal notranslate"><span class="pre">pool</span></code></a> of normalized
 DB-API 2.0 <a class="reference internal" href="api/connection.html#dbapix.connection.Connection" title="dbapix.connection.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">connections</span></code></a> and <a class="reference internal" href="api/cursor.html#dbapix.cursor.Cursor" title="dbapix.cursor.Cursor"><code class="xref py py-class docutils literal notranslate"><span class="pre">cursors</span></code></a>,
@@ -56,7 +56,7 @@ and for them to have the same Python API and semantics regardless of the driver.
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dbapix</span> <span class="k">import</span> <span class="n">create_engine</span>
 
 <span class="c1"># Create an engine with the name of the driver.</span>
-<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;psycopg2&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;postgres&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
     <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
     <span class="n">database</span><span class="o">=</span><span class="s1">&#39;example&#39;</span><span class="p">,</span>
 <span class="p">))</span>
@@ -68,7 +68,7 @@ and for them to have the same Python API and semantics regardless of the driver.
 
     <span class="c1"># If not provided explicitly, parameters are pulled</span>
     <span class="c1"># from the calling scope for an f-string-like experience</span>
-    <span class="c1"># where Bobby Tables won&#39;t cause trouble.</span>
+    <span class="c1"># but where Bobby Tables won&#39;t cause trouble.</span>
     <span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;SELECT bar FROM foo WHERE id = </span><span class="si">{foo_id}</span><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
