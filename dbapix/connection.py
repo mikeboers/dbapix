@@ -1,18 +1,33 @@
 
 
-class ConnectionMixin(object):
+class Connection(object):
     
-    def __init__(self, *args, **kwargs):
-        super(ConnectionMixin, self).__init__(*args, **kwargs)
+    def __init__(self, engine, con):
+
+        self._engine = engine
+        self._raw_con = con
+
         self._autocommit = None
 
-    def cursor(self, *args, **kwargs):
-        cur = super(ConnectionMixin, self).cursor(*args, **kwargs)
-        cur._engine = self._engine
-        return cur
+    def __getattr__(self, key):
+        return getattr(self._raw_con, key)
+
+    def cursor(self):
+        raw = self._raw_con.cursor()
+        return self._engine.cursor_class(self._engine, raw)
 
     def _can_disable_autocommit(self):
         raise NotImplementedError()
+
+    def __enter__(self):
+        # None of the drivers actually do anything here.
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type is None:
+            self.commit()
+        else:
+            self.rollback()
 
     def begin(self):
         
@@ -38,13 +53,13 @@ class ConnectionMixin(object):
     def commit(self):
         if self.autocommit:
             raise RuntimeError("Connection is in autocommit mode.")
-        super(ConnectionMixin, self).commit()
+        self._raw_con.commit()
         self._end()
 
     def rollback(self):
         if self.autocommit:
             raise RuntimeError("Connection is in autocommit mode.")
-        super(ConnectionMixin, self).rollback()
+        self._raw_con.rollback()
         self._end()
 
     def execute(self, query, params=None):

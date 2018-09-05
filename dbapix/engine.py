@@ -7,9 +7,14 @@ import re
 log = logging.getLogger()
 
 from .query import bind as bind_query
+from .connection import Connection
+from .cursor import Cursor
 
 
 class Engine(object):
+
+    connection_class = Connection
+    cursor_class = Cursor
 
     def __init__(self):
         self.pool = []
@@ -31,19 +36,16 @@ class Engine(object):
             con = self.pool.pop(0)
         except IndexError:
             con = self._new_connection(timeout)
-            con._engine = self
+
+        self._checked_out.append(con)
+
+        wrapped = self.connection_class(self, con)
 
         # Store where it came from so we can warn later.
         frame = sys._getframe(1)
-        con._origin = (frame.f_code.co_filename, frame.f_lineno)
+        wrapped._origin = (frame.f_code.co_filename, frame.f_lineno)
 
-        self._prepare_connection(con, **kwargs)
-        self._checked_out.append(con)
-
-        return con
-
-    def _prepare_connection(self, con, **kwargs):
-        pass
+        return wrapped
 
     def _new_connection(self, timeout):
         start = time.time()

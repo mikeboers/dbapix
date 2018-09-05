@@ -1,4 +1,43 @@
 
+Turn everything into wrappers around the raw objects.
+
+    Connection
+
+        ._raw # the real connection
+
+        .closed
+        .close()
+
+        .autocommit <> bool
+        .isolation_level <> str
+
+        .cursor() -> Cursor
+
+        .__enter__() -> self
+        .__exit__(); commit()
+
+        .begin() -> TransactionContext
+        .commit()
+        .rollback()
+
+        .execute/insert/update/delete
+            Pass through.
+
+    Cursor
+
+        ._raw # The real cursor.
+        
+        .description
+        .execute(query, params)
+
+        .insert()
+        .update()
+        .delete()
+
+
+
+
+
 Query builders.
 
     dbx.select('column', dbx.alias('count(1)', 'count'), from_='table').join('table2', on='some condition').where(dbx.or_('foo = {}', 1)).group_by('bar', 'desc')

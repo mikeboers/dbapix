@@ -1,14 +1,55 @@
 
 from .query import bind
+from .row import Row
 
 
-class CursorMixin(object):
+class Cursor(object):
+
+    def __init__(self, engine, raw):
+        self._engine = engine
+        self._raw_cur = raw
+
+    def __getattr__(self, key):
+        return getattr(self._raw_cur, key)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    def fetchone(self):
+        raw = self._raw_cur.fetchone()
+        if raw is not None:
+            return Row._wrap(self, raw)
+
+    def fetchall(self):
+        rows = []
+        while True:
+            row = self.fetchone()
+            if row is None:
+                return rows
+            rows.append(row)
+
+    def __iter__(self):
+        while True:
+            row = self.fetchone()
+            if row is None:
+                return
+            yield row
+
+    def __next__(self):
+        row = self.fetchone()
+        if row is None:
+            raise StopIteration()
+        return row
+
+    next = __next__
 
     def execute(self, query, params=None, _stack_depth=0):
         bound = bind(query, params, _stack_depth + 1)
         query, params = bound(self._engine)
-        # print(query, params)
-        return super(CursorMixin, self).execute(query, params)
+        return self._raw_cur.execute(query, params)
 
     def insert(self, table_name, data, returning=None):
 
@@ -29,7 +70,7 @@ class CursorMixin(object):
         ))
 
         if returning:
-            parts.append('RETURNING "{}"' % returning) # TODO: Quote better.
+            parts.append('RETURNING {}'.format(self._engine._quote_identifier(returning)))
 
         query = ' '.join(parts)
         self.execute(query, params)
