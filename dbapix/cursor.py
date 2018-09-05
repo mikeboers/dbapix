@@ -121,3 +121,9 @@ class Cursor(object):
         self.execute(query, where_params)
 
         return self
+
+    def as_dataframe(self, **kwargs):
+        kwargs.setdefault('columns', [f[0] for f in self.description])
+        import pandas
+        return pandas.DataFrame.from_records(self.fetchall(), **kwargs)
+    
