@@ -2,36 +2,53 @@ from .query import bind
 
 
 generic_implementations = dict(
-    sqlite=['sqlite3'],
+    mariadb=['mysqldb', 'pymysql'],
+    mysql=['mysqldb', 'pymysql'],
     postgres=['psycopg2'],
     postgresql=['psycopg2'],
-    mysql=['mysqldb', 'pymysql'],
-    mariadb=['mysqldb', 'pymysql'],
+    sqlite=['sqlite3'],
 )
 
 
 def get_engine_class(driver):
 
     driver = driver.lower()
-    
-    if driver in generic_implementations:
-        for real_driver in generic_implementations[driver]:
+
+    specifics = generic_implementations.get(driver)
+    if specifics:
+        for real_driver in specifics:
             try:
                 return get_engine_class(real_driver)
             except ImportError:
                 pass
-        raise ValueError("No drivers availible for {}.".format(driver))
+        raise ValueError("None of {} availible for {!r}.".format(specifics, driver))
 
-    mod = __import__('dbapix.drivers.{}'.format(driver), fromlist=[''])
+    mod_name = 'dbapix.drivers.{}'.format(driver)
+    try:
+        mod = __import__(mod_name, fromlist=[''])
+    except ImportError as e:
+        if e.args[0].endswith(mod_name):
+            raise ValueError("Unknown driver {!r}.".format(driver))
+
     return getattr(mod, 'Engine')
 
 
 def create_engine(driver, *args, **kwargs):
-    """Build an :class:`.Engine` for the given driver.
+    """Build an :class:`.Engine` for the given driver::
 
-    :param str driver: The name of the database driver to use.
+        engine = create_engine('postgres',
+            host='localhost',
+            database='example',
+        )
 
-    All other ``*args`` and ``**kwargs`` are passed to the engine constructor.
+    :param str driver: The name of the database driver to use
+
+    The name can be either a specific implementation (e.g. ``"psycopg2"``), or
+    it can be generic. Generic names will be resolved to the first availible
+    specific implementation (e.g. ``"mysql"`` resolves to the first of
+    ``"mysqldb"`` or ``"pymysql"`` to exist.)
+
+    All ``args`` and ``kwargs`` are passed to the engine constructor.
 
     """
     
