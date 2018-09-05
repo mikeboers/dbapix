@@ -53,6 +53,13 @@ class GenericTestMixin(object):
             self.assertEqual(tuple(row), (1, 123))
             self.assertEqual(row['id'], 1)
 
+    def test_closed(self):
+        db = self.create_engine()
+        con = db.get_connection()
+        self.assertFalse(con.closed)
+        con.close()
+        self.assertTrue(con.closed)
+
 
     def test_auto_binding(self):
 

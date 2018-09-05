@@ -6,18 +6,22 @@ import six
 @six.add_metaclass(abc.ABCMeta)
 class Connection(object):
     
-    def __init__(self, engine, con, autocommit=False):
+    def __init__(self, engine, con):
 
         self._engine = engine
         self.wrapped = con
 
         # For tracking state around `begin()`.
         self._autocommit = None
-
-        self._reset_session(autocommit)
     
     def _reset_session(self, autocommit=False):
         self.autocommit = autocommit
+
+    def _should_put_close(self):
+        pass
+
+    def _get_nonidle_status(self):
+        pass
 
     def __getattr__(self, key):
         return getattr(self.wrapped, key)
@@ -36,7 +40,7 @@ class Connection(object):
     @autocommit.setter
     def autocommit(self, value):
         self.wrapped.autocommit = value
-    
+
     def __enter__(self):
         # None of the drivers actually do anything here.
         return self

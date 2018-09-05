@@ -34,6 +34,14 @@ class Connection(_Connection):
     def _can_disable_autocommit(self):
         return self.wrapped.get_transaction_status() == pgx.TRANSACTION_STATUS_IDLE
 
+    def _should_put_close(self):
+        return self.wrapped.get_transaction_status() in (pgx.TRANSACTION_STATUS_UNKNOWN, )
+
+    def _get_nonidle_status(self):
+        status = self.wrapped.get_transaction_status()
+        if status != pgx.TRANSACTION_STATUS_IDLE:
+            return _status_names.get(status, status)
+
 
 class Engine(_Engine):
 
@@ -64,13 +72,6 @@ class Engine(_Engine):
             any(x in e.args[0] for x in ('could not connect', 'starting up', 'shutting down'))
         )
 
-    def _should_put_close(self, con):
-        return con.get_transaction_status() in (pgx.TRANSACTION_STATUS_UNKNOWN, )
-
-    def _get_nonidle_status(self, con):
-        status = con.get_transaction_status()
-        if status != pgx.TRANSACTION_STATUS_IDLE:
-            return _status_names.get(status, status)
 
 
 

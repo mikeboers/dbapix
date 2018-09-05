@@ -40,19 +40,19 @@ class Engine(object):
     def get_connection(self, timeout=None, **kwargs):
         
         try:
-            real_con = self.pool.pop(0)
+            con = self.pool.pop(0)
         except IndexError:
             real_con = self._new_connection(timeout)
+            con = self.connection_class(self, real_con)
 
-        self._checked_out.append(real_con)
-
-        wrapped_con = self.connection_class(self, real_con, **kwargs)
+        self._checked_out.append(con)
+        con._reset_session(**kwargs)
 
         # Store where it came from so we can warn later.
         frame = sys._getframe(1)
-        wrapped_con._origin = (frame.f_code.co_filename, frame.f_lineno)
+        con._origin = (frame.f_code.co_filename, frame.f_lineno)
 
-        return wrapped_con
+        return con
 
     def _new_connection(self, timeout):
         start = time.time()
@@ -78,26 +78,18 @@ class Engine(object):
     def _connect_exc_is_timeout(self, e):
         pass
 
-    def _should_put_close(self, con):
-        pass
-
-    def _get_nonidle_status(self, con):
-        pass
-
     def put_connection(self, con, close=False, warn_status=True):
-
-        real_con = con.wrapped
 
         if con.closed:
             return
 
         close = close or len(self.pool) >= self.max_idle
 
-        if self._should_put_close(real_con):
+        if con._should_put_close():
             con.close()
             return
 
-        nonidle = self._get_nonidle_status(real_con)
+        nonidle = con._get_nonidle_status()
         if nonidle:
             if warn_status:
                 log.warning("Connection from {0[0]}:{0[1]} returned with non-idle status {1}.".format(
@@ -111,9 +103,9 @@ class Engine(object):
             con.close()
             return
 
-        if real_con not in self.pool:
-            self._checked_out.remove(real_con)
-            self.pool.append(real_con)
+        if con not in self.pool:
+            self._checked_out.remove(con)
+            self.pool.append(con)
 
     def _build_context(self, con, obj):
         ctx = ConnectionContext(self, con, obj)

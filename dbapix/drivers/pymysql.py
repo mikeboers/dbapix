@@ -15,6 +15,10 @@ class Connection(_Connection):
     def closed(self):
         return self.wrapped._closed
 
+    def close(self):
+        if not self.wrapped._closed:
+            self.wrapped.close()
+    
     def _can_disable_autocommit(self):
         # There really isn't a way we can tell, so... yeah.
         return True
