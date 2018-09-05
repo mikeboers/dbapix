@@ -1,15 +1,16 @@
+from six import string_types
 
 
 class Row(tuple):
 
-    @classmethod
-    def _wrap(cls, cur, raw):
-        self = cls(raw)
-        #self._fields = fields
-        return self
+    def __new__(cls, raw, *args):
+        return super(Row, cls).__new__(cls, raw)
+
+    def __init__(self, raw, fields):
+        self._fields = fields
 
     def __getitem__(self, x):
-        if isinstance(x, basestring):
+        if isinstance(x, string_types):
             x = self._fields[x]
         return super(Row, self).__getitem__(x)
 

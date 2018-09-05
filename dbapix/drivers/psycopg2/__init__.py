@@ -32,7 +32,7 @@ _status_names = {
 class Connection(_Connection):
 
     def _can_disable_autocommit(self):
-        return self.get_transaction_status() == pgx.TRANSACTION_STATUS_IDLE
+        return self.wrapped.get_transaction_status() == pgx.TRANSACTION_STATUS_IDLE
 
 
 class Engine(_Engine):
@@ -45,9 +45,8 @@ class Engine(_Engine):
         super(Engine, self).__init__()
         self.connect_kwargs = connect_kwargs
 
-    def _prepare_connection(self, con, autocommit=False):
-        # Reset the session to a reasonable default.
-        con.set_session(
+    def _reset_session(self, autocommit=False):
+        self.wrapped.set_session(
             isolation_level='DEFAULT',
             readonly=False,
             deferrable=False,

@@ -20,7 +20,7 @@ class Connection(_Connection):
         return self._closed
 
     def close(self):
-        self._raw_con.close()
+        self.wrapped.close()
         self._closed = True
 
     def _can_disable_autocommit(self):
@@ -30,17 +30,17 @@ class Connection(_Connection):
     @property
     def autocommit(self):
         # In Python's sqlite3 autocommit is tied to the isolation level.
-        return self.isolation_level is None
+        return self.wrapped.isolation_level is None
 
     @autocommit.setter
     def autocommit(self, value):
 
         if value and self.isolation_level is not None:
-            self._isolation_level = self.isolation_level
-            self.isolation_level = None
+            self._isolation_level = self.wrapped.isolation_level
+            self.wrapped.isolation_level = None
 
         elif not value and self.isolation_level is None:
-            self.isolation_level = self._isolation_level or ''
+            self.wrapped.isolation_level = self._isolation_level or ''
             self._isolation_level = None
 
 
@@ -59,4 +59,8 @@ class Engine(_Engine):
         return sqlite3.connect(self.path,
             timeout=timeout or 0,
         )
+
+    def _connect_exc_is_timeout(self, e):
+        return False
+
 

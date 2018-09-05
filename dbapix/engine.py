@@ -3,18 +3,25 @@ import sys
 import time
 import weakref
 import re
+import abc
 
-log = logging.getLogger()
+import six
 
 from .query import bind as bind_query
 from .connection import Connection
 from .cursor import Cursor
+from .row import Row
 
 
+log = logging.getLogger()
+
+
+@six.add_metaclass(abc.ABCMeta)
 class Engine(object):
 
     connection_class = Connection
     cursor_class = Cursor
+    row_class = Row
 
     def __init__(self):
         self.pool = []
@@ -33,19 +40,19 @@ class Engine(object):
     def get_connection(self, timeout=None, **kwargs):
         
         try:
-            con = self.pool.pop(0)
+            real_con = self.pool.pop(0)
         except IndexError:
-            con = self._new_connection(timeout)
+            real_con = self._new_connection(timeout)
 
-        self._checked_out.append(con)
+        self._checked_out.append(real_con)
 
-        wrapped = self.connection_class(self, con)
+        wrapped_con = self.connection_class(self, real_con, **kwargs)
 
         # Store where it came from so we can warn later.
         frame = sys._getframe(1)
-        wrapped._origin = (frame.f_code.co_filename, frame.f_lineno)
+        wrapped_con._origin = (frame.f_code.co_filename, frame.f_lineno)
 
-        return wrapped
+        return wrapped_con
 
     def _new_connection(self, timeout):
         start = time.time()
@@ -63,11 +70,13 @@ class Engine(object):
             time.sleep(delay)
             delay *= 1.41
 
+    @abc.abstractmethod
     def _connect(self, timeout):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def _connect_exc_is_timeout(self, e):
-        raise NotImplementedError()
+        pass
 
     def _should_put_close(self, con):
         pass
@@ -77,16 +86,18 @@ class Engine(object):
 
     def put_connection(self, con, close=False, warn_status=True):
 
+        real_con = con.wrapped
+
         if con.closed:
             return
 
         close = close or len(self.pool) >= self.max_idle
 
-        if self._should_put_close(con):
+        if self._should_put_close(real_con):
             con.close()
             return
 
-        nonidle = self._get_nonidle_status(con)
+        nonidle = self._get_nonidle_status(real_con)
         if nonidle:
             if warn_status:
                 log.warning("Connection from {0[0]}:{0[1]} returned with non-idle status {1}.".format(
@@ -100,9 +111,9 @@ class Engine(object):
             con.close()
             return
 
-        if con not in self.pool:
-            self._checked_out.remove(con)
-            self.pool.append(con)
+        if real_con not in self.pool:
+            self._checked_out.remove(real_con)
+            self.pool.append(real_con)
 
     def _build_context(self, con, obj):
         ctx = ConnectionContext(self, con, obj)

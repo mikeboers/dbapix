@@ -3,7 +3,7 @@ Turn everything into wrappers around the raw objects.
 
     Connection
 
-        ._raw # the real connection
+        .wrapped # the real connection
 
         .closed
         .close()
@@ -25,7 +25,7 @@ Turn everything into wrappers around the raw objects.
 
     Cursor
 
-        ._raw # The real cursor.
+        .wrapped # The real cursor.
         
         .description
         .execute(query, params)

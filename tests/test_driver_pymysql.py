@@ -5,11 +5,10 @@ from .test_driver_generic import GenericTestMixin
 
 
 def create_mysql_engine():
-    return create_engine('pymysql', dict(
-        host=    os.environ.get('DBAPIX_TEST_PYMYSQL_HOST'    , 'su01.mm'),
-        database=os.environ.get('DBAPIX_TEST_PYMYSQL_DATABASE', 'sandbox'),
-        password=os.environ.get('DBAPIX_TEST_PYMYSQL_PASSWORD', 'xxx'),
-    ))
+    kwargs = get_environ_subset('DBAPIX_TEST_PYMYSQL')
+    kwargs.setdefault('host', 'localhost')
+    kwargs.setdefault('database', 'dbapix')
+    return create_engine('pymysql', kwargs)
 
 
 class TestPyMySQLGenerics(GenericTestMixin, TestCase):

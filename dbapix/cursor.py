@@ -1,16 +1,19 @@
+import abc
+
+import six
 
 from .query import bind
-from .row import Row
 
 
+@six.add_metaclass(abc.ABCMeta)
 class Cursor(object):
 
     def __init__(self, engine, raw):
         self._engine = engine
-        self._raw_cur = raw
+        self.wrapped = raw
 
     def __getattr__(self, key):
-        return getattr(self._raw_cur, key)
+        return getattr(self.wrapped, key)
 
     def __enter__(self):
         return self
@@ -19,9 +22,9 @@ class Cursor(object):
         self.close()
 
     def fetchone(self):
-        raw = self._raw_cur.fetchone()
+        raw = self.wrapped.fetchone()
         if raw is not None:
-            return Row._wrap(self, raw)
+            return self._engine.row_class(raw, self._field_indexes)
 
     def fetchall(self):
         rows = []
@@ -47,9 +50,14 @@ class Cursor(object):
     next = __next__
 
     def execute(self, query, params=None, _stack_depth=0):
+
         bound = bind(query, params, _stack_depth + 1)
         query, params = bound(self._engine)
-        return self._raw_cur.execute(query, params)
+        res = self.wrapped.execute(query, params)
+
+        self._field_indexes = {}
+        for i, field in enumerate(self.description or ()):
+            self._field_indexes[field[0]] = i
 
     def insert(self, table_name, data, returning=None):
 

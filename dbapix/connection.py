@@ -1,24 +1,42 @@
+import abc
+
+import six
 
 
+@six.add_metaclass(abc.ABCMeta)
 class Connection(object):
     
-    def __init__(self, engine, con):
+    def __init__(self, engine, con, autocommit=False):
 
         self._engine = engine
-        self._raw_con = con
+        self.wrapped = con
 
+        # For tracking state around `begin()`.
         self._autocommit = None
 
+        self._reset_session(autocommit)
+    
+    def _reset_session(self, autocommit=False):
+        self.autocommit = autocommit
+
     def __getattr__(self, key):
-        return getattr(self._raw_con, key)
+        return getattr(self.wrapped, key)
 
     def cursor(self):
-        raw = self._raw_con.cursor()
-        return self._engine.cursor_class(self._engine, raw)
+        raw_cur = self.wrapped.cursor()
+        return self._engine.cursor_class(self._engine, raw_cur)
 
+    @abc.abstractmethod
     def _can_disable_autocommit(self):
-        raise NotImplementedError()
+        pass
 
+    @property
+    def autocommit(self):
+        return self.wrapped.autocommit
+    @autocommit.setter
+    def autocommit(self, value):
+        self.wrapped.autocommit = value
+    
     def __enter__(self):
         # None of the drivers actually do anything here.
         return self
@@ -53,13 +71,13 @@ class Connection(object):
     def commit(self):
         if self.autocommit:
             raise RuntimeError("Connection is in autocommit mode.")
-        self._raw_con.commit()
+        self.wrapped.commit()
         self._end()
 
     def rollback(self):
         if self.autocommit:
             raise RuntimeError("Connection is in autocommit mode.")
-        self._raw_con.rollback()
+        self.wrapped.rollback()
         self._end()
 
     def execute(self, query, params=None):
