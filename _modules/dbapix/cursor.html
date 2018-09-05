@@ -39,7 +39,7 @@
 <span class="kn">from</span> <span class="nn">.query</span> <span class="k">import</span> <span class="n">bind</span>
 
 
-<div class="viewcode-block" id="Cursor"><a class="viewcode-back" href="../../index.html#dbapix.cursor.Cursor">[docs]</a><span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
+<div class="viewcode-block" id="Cursor"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor">[docs]</a><span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Cursor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">raw</span><span class="p">):</span>
@@ -55,7 +55,7 @@
     <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Cursor.fetchone"><a class="viewcode-back" href="../../index.html#dbapix.cursor.Cursor.fetchone">[docs]</a>    <span class="k">def</span> <span class="nf">fetchone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Cursor.fetchone"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.fetchone">[docs]</a>    <span class="k">def</span> <span class="nf">fetchone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrapped</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">row_class</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_field_indexes</span><span class="p">)</span></div>
@@ -83,7 +83,7 @@
 
     <span class="nb">next</span> <span class="o">=</span> <span class="fm">__next__</span>
 
-<div class="viewcode-block" id="Cursor.execute"><a class="viewcode-back" href="../../index.html#dbapix.cursor.Cursor.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="Cursor.execute"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 
         <span class="n">bound</span> <span class="o">=</span> <span class="n">bind</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">_stack_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">query</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">bound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="p">)</span>
@@ -156,7 +156,7 @@
 
         <span class="k">return</span> <span class="bp">self</span>
 
-<div class="viewcode-block" id="Cursor.as_dataframe"><a class="viewcode-back" href="../../index.html#dbapix.cursor.Cursor.as_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Cursor.as_dataframe"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.as_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;columns&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">])</span>
         <span class="kn">import</span> <span class="nn">pandas</span>
         <span class="k">return</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fetchall</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
@@ -180,7 +180,12 @@
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../index.html">dbapix</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/core.html">Core API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/engine.html">Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/connection.html">Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/cursor.html">Cursors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/row.html">Rows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/query.html">Queries</a></li>
 </ul>
 
 <div class="relations">
