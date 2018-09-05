@@ -1,42 +1,8 @@
 
-Turn everything into wrappers around the raw objects.
-
-    Connection
-
-        .wrapped # the real connection
-
-        .closed
-        .close()
-
-        .autocommit <> bool
-        .isolation_level <> str
-
-        .cursor() -> Cursor
-
-        .__enter__() -> self
-        .__exit__(); commit()
-
-        .begin() -> TransactionContext
-        .commit()
-        .rollback()
-
-        .execute/insert/update/delete
-            Pass through.
-
-    Cursor
-
-        .wrapped # The real cursor.
-        
-        .description
-        .execute(query, params)
-
-        .insert()
-        .update()
-        .delete()
-
-
-
-
+Standardize a few more things:
+    
+    con.isolation_level
+    con.transaction_status
 
 Query builders.
 

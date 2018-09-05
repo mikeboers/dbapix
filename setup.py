@@ -12,7 +12,7 @@ setup(
     include_package_data=True,
     
     author='Mike Boers',
-    author_email='farmsoup@mikeboers.com',
+    author_email='dbapix@mikeboers.com',
     license='BSD-3',
 
     install_requires='''
