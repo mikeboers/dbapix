@@ -63,13 +63,23 @@ class BoundQuery(object):
             self.parse(query, params, _stack_depth + 1)
 
     def __str__(self, engine=None):
+
         out = []
+
+        escape_placeholders = None
+        if engine and any(isinstance(x, Placeholder) for x in self.query_parts):
+            if engine._paramstyle == 'format':
+                escape_placeholders = lambda x: x.replace('%', '%%')
+
         for x in self.query_parts:
             sql_func = getattr(x, '__sql__', None)
             if sql_func:
                 out.append(sql_func(engine))
             else:
-                out.append(str(x))
+                x = str(x)
+                if escape_placeholders:
+                    x = escape_placeholders(x)
+                out.append(x)
         return ''.join(out)
 
     def __call__(self, engine=None):

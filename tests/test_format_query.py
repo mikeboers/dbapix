@@ -47,6 +47,17 @@ class TestFormatQuery(TestCase):
         self.assertEqual(q, 'SELECT ?')
         self.assertEqual(p, [1])
 
+    def test_escaped_params(self):
+
+        foo = 123
+
+        bound = bind('''SELECT '%s' ''')
+        q, p = bound(Postgres)
+        self.assertEqual(q, '''SELECT '%s' ''')
+        
+        bound = bind('''SELECT '%s', {foo} ''')
+        q, p = bound(Postgres)
+        self.assertEqual(q, '''SELECT '%%s', %s ''')
 
     def test_scope(self):
 
