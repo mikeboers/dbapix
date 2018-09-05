@@ -34,17 +34,185 @@
   <div class="section" id="dbapix">
 <h1>dbapix<a class="headerlink" href="#dbapix" title="Permalink to this headline">¶</a></h1>
 <p><strong>dbapix</strong> is a unification of, and extension to, several DB-API 2.0 drivers.</p>
-<p>..note:: There is nothing here yet!</p>
+<p>We currently wrap:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">psycopg2</span></code> <a class="reference external" href="http://initd.org/psycopg/">(docs)</a></li>
+<li><code class="docutils literal notranslate"><span class="pre">sqlite3</span></code> <a class="reference external" href="https://docs.python.org/3.7/library/sqlite3.html">(docs)</a></li>
+<li><code class="docutils literal notranslate"><span class="pre">pymysql</span></code> <a class="reference external" href="https://github.com/PyMySQL/PyMySQL">(GitHub)</a></li>
+</ul>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dbapix</span> <span class="k">import</span> <span class="n">create_engine</span>
+
+<span class="c1"># Create an engine with the name of the driver.</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;psycopg2&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+    <span class="n">database</span><span class="o">=</span><span class="s1">&#39;example&#39;</span><span class="p">,</span>
+<span class="p">))</span>
+
+<span class="c1"># Context managers provide reliable resource management.</span>
+<span class="k">with</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
+
+    <span class="n">foo_id</span> <span class="o">=</span> <span class="mi">123</span>
+
+    <span class="c1"># If not provided explicitly, parameters are pulled</span>
+    <span class="c1"># from the calling scope for an f-string-like experience</span>
+    <span class="c1"># where Bobby Tables won&#39;t cause trouble.</span>
+    <span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;SELECT bar FROM foo WHERE id = </span><span class="si">{foo_id}</span><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cur</span><span class="p">:</span>
+        <span class="c1"># Values are accessible by index or name.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;bar&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">dbapix</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#table-of-contents">Table of Contents</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#core">Core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#engines">Engines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#manual-connection-management">Manual Connection Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#automatic-connection-management">Automatic Connection Management</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#connections">Connections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cursors">Cursors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rows">Rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#queries">Queries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 </div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
+</div>
+<div class="section" id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="core">
+<h3>Core<a class="headerlink" href="#core" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="dbapix.create_engine">
+<code class="descclassname">dbapix.</code><code class="descname">create_engine</code><span class="sig-paren">(</span><em>driver</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix.html#create_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.create_engine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build an <a class="reference internal" href="#dbapix.engine.Engine" title="dbapix.engine.Engine"><code class="xref py py-class docutils literal notranslate"><span class="pre">Engine</span></code></a> for the given driver.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>driver</strong> (<em>str</em>) – The name of the database driver to use.</td>
+</tr>
+</tbody>
+</table>
+<p>All other <code class="docutils literal notranslate"><span class="pre">*args</span></code> and <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> are passed to the engine constructor.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="engines">
+<h3>Engines<a class="headerlink" href="#engines" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dbapix.engine.Engine">
+<em class="property">class </em><code class="descclassname">dbapix.engine.</code><code class="descname">Engine</code><a class="reference internal" href="_modules/dbapix/engine.html#Engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.engine.Engine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="section" id="manual-connection-management">
+<h4>Manual Connection Management<a class="headerlink" href="#manual-connection-management" title="Permalink to this headline">¶</a></h4>
+<p>Connections are managed via a connection pool in the engine. You can manually
+checkout and return connections; you must either return or close connections
+that you checkout to avoid resource leaks (and deadlocks in some cases).</p>
+<dl class="method">
+<dt id="dbapix.engine.Engine.get_connection">
+<code class="descclassname">Engine.</code><code class="descname">get_connection</code><span class="sig-paren">(</span><em>timeout=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/engine.html#Engine.get_connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.engine.Engine.get_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dbapix.engine.Engine.put_connection">
+<code class="descclassname">Engine.</code><code class="descname">put_connection</code><span class="sig-paren">(</span><em>con</em>, <em>close=False</em>, <em>warn_status=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/engine.html#Engine.put_connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.engine.Engine.put_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="automatic-connection-management">
+<h4>Automatic Connection Management<a class="headerlink" href="#automatic-connection-management" title="Permalink to this headline">¶</a></h4>
+<dl class="method">
+<dt id="dbapix.engine.Engine.connect">
+<code class="descclassname">Engine.</code><code class="descname">connect</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/engine.html#Engine.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.engine.Engine.connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dbapix.engine.Engine.cursor">
+<code class="descclassname">Engine.</code><code class="descname">cursor</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/engine.html#Engine.cursor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.engine.Engine.cursor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dbapix.engine.Engine.execute">
+<code class="descclassname">Engine.</code><code class="descname">execute</code><span class="sig-paren">(</span><em>query</em>, <em>params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/engine.html#Engine.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.engine.Engine.execute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="connections">
+<h3>Connections<a class="headerlink" href="#connections" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dbapix.connection.Connection">
+<em class="property">class </em><code class="descclassname">dbapix.connection.</code><code class="descname">Connection</code><span class="sig-paren">(</span><em>engine</em>, <em>con</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/connection.html#Connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="cursors">
+<h3>Cursors<a class="headerlink" href="#cursors" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dbapix.cursor.Cursor">
+<em class="property">class </em><code class="descclassname">dbapix.cursor.</code><code class="descname">Cursor</code><span class="sig-paren">(</span><em>engine</em>, <em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/cursor.html#Cursor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dbapix.cursor.Cursor.execute">
+<code class="descclassname">Cursor.</code><code class="descname">execute</code><span class="sig-paren">(</span><em>query</em>, <em>params=None</em>, <em>_stack_depth=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/cursor.html#Cursor.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor.execute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dbapix.cursor.Cursor.fetchone">
+<code class="descclassname">Cursor.</code><code class="descname">fetchone</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/cursor.html#Cursor.fetchone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor.fetchone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dbapix.cursor.Cursor.as_dataframe">
+<code class="descclassname">Cursor.</code><code class="descname">as_dataframe</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/cursor.html#Cursor.as_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor.as_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="rows">
+<h3>Rows<a class="headerlink" href="#rows" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dbapix.row.Row">
+<em class="property">class </em><code class="descclassname">dbapix.row.</code><code class="descname">Row</code><span class="sig-paren">(</span><em>raw</em>, <em>fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/row.html#Row"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.row.Row" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="queries">
+<h3>Queries<a class="headerlink" href="#queries" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="dbapix.query.bind">
+<code class="descclassname">dbapix.query.</code><code class="descname">bind</code><span class="sig-paren">(</span><em>query</em>, <em>params=None</em>, <em>_stack_depth=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/query.html#bind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.query.bind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="dbapix.query.BoundQuery">
+<em class="property">class </em><code class="descclassname">dbapix.query.</code><code class="descname">BoundQuery</code><span class="sig-paren">(</span><em>query=None</em>, <em>params=None</em>, <em>_stack_depth=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dbapix/query.html#BoundQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.query.BoundQuery" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
 </div>
 
 
@@ -64,6 +232,28 @@
 
 
 <h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">dbapix</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#table-of-contents">Table of Contents</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#core">Core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#engines">Engines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#manual-connection-management">Manual Connection Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#automatic-connection-management">Automatic Connection Management</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#connections">Connections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cursors">Cursors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rows">Rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#queries">Queries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
