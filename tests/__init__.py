@@ -2,7 +2,7 @@ import os
 
 from unittest import TestCase
 
-from dbapix import bind, create_engine
+from dbapix import bind, get_engine_class, create_engine
 
 
 def get_environ_subset(prefix, lower=True):

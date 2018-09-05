@@ -1,5 +1,7 @@
 import os
 
+from dbapix.drivers.sqlite3 import Engine
+
 from . import *
 from .test_driver_generic import GenericTestMixin
 
@@ -16,4 +18,5 @@ class TestSQLite3Generics(GenericTestMixin, TestCase):
 
 class TestSQLite3(TestCase):
 
-    pass
+    def test_generic_names(self):
+        self.assertIs(get_engine_class('sqlite'), Engine)

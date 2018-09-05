@@ -1,5 +1,7 @@
 import os
 
+from dbapix.drivers.psycopg2 import Engine
+
 from . import *
 from .test_driver_generic import GenericTestMixin
 
@@ -19,4 +21,6 @@ class TestPsycopg2Generics(GenericTestMixin, TestCase):
 
 class TestPsycopg2(TestCase):
 
-    pass
+    def test_generic_names(self):
+        self.assertIs(get_engine_class('postgres'), Engine)
+        self.assertIs(get_engine_class('postgresql'), Engine)
