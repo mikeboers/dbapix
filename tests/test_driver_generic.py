@@ -60,7 +60,6 @@ class GenericTestMixin(object):
         con.close()
         self.assertTrue(con.closed)
 
-
     def test_auto_binding(self):
 
         db = self.create_engine()
@@ -130,4 +129,18 @@ class GenericTestMixin(object):
         assert_count(5)
         con1.commit()
         assert_count(6)
+
+        # Implicit rollbacks.
+        con1.insert('test_generic_transactions', dict(value=789))
+        assert_count(6)
+        con1.rollback()
+        assert_count(6)
+
+        # Explicit rollbacks.
+        with con1.begin():
+            con1.insert('test_generic_transactions', dict(value=789))
+            assert_count(6)
+            con1.rollback()
+        assert_count(6)
+
 
