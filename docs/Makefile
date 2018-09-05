@@ -22,5 +22,9 @@ help:
 open:
 	open $(BUILDDIR)/html/index.html
 
-upload:
+upload: FORCE
 	./upload
+
+.PHONY: FORCE
+FORCE:
+	
