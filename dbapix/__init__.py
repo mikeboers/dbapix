@@ -23,14 +23,10 @@ def get_engine_class(driver):
                 pass
         raise ValueError("None of {} availible for {!r}.".format(specifics, driver))
 
+    # TODO: Be able to be smarter about why drivers are missing; is the driver
+    # actually not supported, or is it missing dependencies?
     mod_name = 'dbapix.drivers.{}'.format(driver)
-    try:
-        mod = __import__(mod_name, fromlist=[''])
-    except ImportError as e:
-        if e.args[0].endswith(mod_name):
-            raise ValueError("Unknown driver {!r}.".format(driver))
-        raise
-
+    mod = __import__(mod_name, fromlist=[''])
     return getattr(mod, 'Engine')
 
 
