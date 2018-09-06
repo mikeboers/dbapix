@@ -4,6 +4,7 @@ from . import *
 from .test_driver_generic import GenericTestMixin
 
 
+@needs_imports('MySQLdb')
 def create_mysql_engine():
     kwargs = get_environ_subset('DBAPIX_TEST_MYSQLDB')
     kwargs.setdefault('host', 'localhost')

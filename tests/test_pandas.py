@@ -3,6 +3,7 @@ from . import *
 
 class TestPandas(TestCase):
 
+    @needs_imports('pandas')
     def test_basics(self):
 
         db = create_engine('sqlite3', ':memory:')

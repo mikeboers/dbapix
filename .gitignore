@@ -1,5 +1,5 @@
 *.db
 *.sqlite
-/env.sh
+/env*.sh
 /docs/_build
-/venv
+/venv*

@@ -27,11 +27,7 @@ class GenericTestMixin(object):
             db.close()
 
     def create_engine(self):
-        try:
-            db = self._create_engine()
-        except ImportError as e:
-            print(e)
-            raise SkipTest()
+        db = self._create_engine()
         self.engines.append(db)
         return db
 
@@ -106,6 +102,9 @@ class GenericTestMixin(object):
         con1 = db.get_connection()
         con2 = db.get_connection(autocommit=True)
 
+        self.assertFalse(con1.autocommit)
+        self.assertTrue(con2.autocommit)
+        
         with con1:
             con1.execute('''DROP TABLE IF EXISTS test_generic_transactions''')
             con1.execute('''CREATE TABLE test_generic_transactions (id {SERIAL!t} PRIMARY KEY, value INTEGER NOT NULL)''')

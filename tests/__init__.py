@@ -1,9 +1,24 @@
 import os
+import functools
 
 from unittest import TestCase
 from unittest.case import SkipTest
 
 from dbapix import bind, get_engine_class, create_engine
+
+
+def needs_imports(*modules):
+    def decorator(func):
+        @functools.wraps(func)
+        def _needs_imports(*args, **kwargs):
+            for mod in modules:
+                try:
+                    __import__(mod, fromlist=[''])
+                except ImportError:
+                    raise SkipTest()
+            return func(*args, **kwargs)
+        return _needs_imports
+    return decorator
 
 
 def get_environ_subset(prefix, lower=True):
