@@ -29,6 +29,7 @@ def get_engine_class(driver):
     except ImportError as e:
         if e.args[0].endswith(mod_name):
             raise ValueError("Unknown driver {!r}.".format(driver))
+        raise
 
     return getattr(mod, 'Engine')
 
