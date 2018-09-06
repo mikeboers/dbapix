@@ -124,8 +124,10 @@ class Cursor(object):
 
         return self
 
-    def as_dataframe(self, **kwargs):
-        kwargs.setdefault('columns', [f[0] for f in self.description])
+    def as_dataframe(self, rows=None, **kwargs):
         import pandas
-        return pandas.DataFrame.from_records(self.fetchall(), **kwargs)
+        if rows is None:
+            rows = self.fetchall()
+        kwargs.setdefault('columns', [f[0] for f in self.description])
+        return pandas.DataFrame.from_records(rows, **kwargs)
     
