@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 import pymysql
 
-from six import string_types
-
 from dbapix.connection import Connection as _Connection
 from dbapix.cursor import Cursor as _Cursor
 from dbapix.engine import Engine as _Engine
@@ -45,10 +43,6 @@ class Engine(_Engine):
 
     def _connect(self, timeout):
         return pymysql.Connect(
-
-            # read_timeout=timeout,
-            # write_timeout=timeout,
-
             **self.connect_kwargs
         )
 
