@@ -5,6 +5,24 @@ from six import PY2, string_types
 
 class Row(tuple):
 
+    """A row in a query result.
+
+    Rows are tuples, but they have been augmented to behave like dicts::
+
+        for row in cur.execute('''SELECT foo FROM bar'''):
+            print(row[0])
+            print(row['foo']) # The same thing.
+
+    **Warning:** checking if a string is in a row via ``'foo' in row`` will
+    check for BOTH the key ``'foo'`` and the value ``'foo'``! If you need to be
+    explicit, then you should look in the various views::
+
+        'foo' in row.viewkeys()
+        # of
+        'foo' in row.viewvalues()
+
+    """
+
     def __new__(cls, raw, *args):
         return super(Row, cls).__new__(cls, raw)
 
@@ -36,6 +54,8 @@ class Row(tuple):
 
     def iterkeys(self):
         return RowKeysView(self)
+    def viewkeys(self):
+        return RowKeysView(self)
 
     def keys(self):
         if PY2:
@@ -44,6 +64,8 @@ class Row(tuple):
             return RowKeysView(self)
 
     def itervalues(self):
+        return RowValuesView(self)
+    def viewvalues(self):
         return RowValuesView(self)
 
     def values(self):
@@ -54,10 +76,12 @@ class Row(tuple):
 
     def iteritems(self):
         return RowItemsView(self)
+    def viewitems(self):
+        return RowItemsView(self)
 
     def items(self):
         if PY2:
-            return list(RowItemsView(self))
+            return [(k, self[i]) for i, k in enumerate(self._field_names)]
         else:
             return RowItemsView(self)
 
@@ -79,7 +103,7 @@ class RowKeysView(_ViewMixin, collections.KeysView):
         return iter(self._row._field_names)
 
     def __contains__(self, x):
-        return x in self._row
+        return x in self._row._field_indexes
 
 class RowValuesView(_ViewMixin, collections.ValuesView):
 
@@ -87,7 +111,8 @@ class RowValuesView(_ViewMixin, collections.ValuesView):
         return iter(self._row)
 
     def __contains__(self, x):
-        return x in self._row
+        # This is nasty.
+        return tuple.__contains__(self._row, x)
 
 class RowItemsView(_ViewMixin, collections.ItemsView):
 

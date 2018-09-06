@@ -49,6 +49,11 @@ class TestRow(TestCase):
         self.assertEqual(row.get('notakey', 'bar'), 'bar')
         self.assertIs(row.get('notakey'), None)
 
+        self.assertIn('value', row.viewkeys())
+        self.assertNotIn('value', row.viewvalues())
+        self.assertNotIn('foo', row.viewkeys())
+        self.assertIn('foo', row.viewvalues())
+
         self.assertEqual(list(row), [1, 'foo'])
 
         self.assertEqual(list(row.keys()), ['id', 'value'])
