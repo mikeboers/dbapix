@@ -59,6 +59,8 @@ class Cursor(object):
         for i, field in enumerate(self.description or ()):
             self._field_indexes[field[0]] = i
 
+        return self
+
     def insert(self, table_name, data, returning=None):
 
         parts = ['INSERT INTO %s' % self._engine._quote_identifier(table_name)]
