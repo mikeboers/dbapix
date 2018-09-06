@@ -24,7 +24,7 @@ class Cursor(object):
     def fetchone(self):
         raw = self.wrapped.fetchone()
         if raw is not None:
-            return self._engine.row_class(raw, self._field_indexes)
+            return self._engine.row_class(raw, self)
 
     def fetchall(self):
         rows = []
@@ -55,8 +55,10 @@ class Cursor(object):
         query, params = bound(self._engine)
         res = self.wrapped.execute(query, params)
 
+        self._fields = []
         self._field_indexes = {}
         for i, field in enumerate(self.description or ()):
+            self._fields.append(field[0])
             self._field_indexes[field[0]] = i
 
         return self
