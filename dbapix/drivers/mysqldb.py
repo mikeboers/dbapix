@@ -2,9 +2,9 @@ from __future__ import absolute_import
 
 import MySQLdb
 
-from six import string_types
-
-from .pymysql import Engine as _Engine, Connection as _Connection
+from dbapix.connection import Connection as _Connection
+from dbapix.cursor import Cursor as _Cursor
+from dbapix.engine import Engine as _Engine
 
 
 class Connection(_Connection):
@@ -22,16 +22,31 @@ class Connection(_Connection):
             self._closed = True
             self.wrapped.close()
     
+    def _can_disable_autocommit(self):
+        # There really isn't a way we can tell, so... yeah.
+        return True
+
+    @property
+    def autocommit(self):
+        return self.wrapped.get_autocommit()
+
+    @autocommit.setter
+    def autocommit(self, value):
+        # It is a method in the superclass.
+        self.wrapped.autocommit(value)
+
 
 class Engine(_Engine):
 
+    _paramstyle = 'format'
+    
     connection_class = Connection
 
     def _connect(self, timeout):
         return MySQLdb.Connect(
-
-            # read_timeout=timeout,
-            # write_timeout=timeout,
-
             **self.connect_kwargs
         )
+
+    def _connect_exc_is_timeout(self, e):
+        pass
+
