@@ -42,6 +42,10 @@ class Engine(_Engine):
     
     connection_class = Connection
 
+    def __init__(self, connect_kwargs):
+        super(Engine, self).__init__()
+        self.connect_kwargs = connect_kwargs
+
     def _connect(self, timeout):
         return MySQLdb.Connect(
             **self.connect_kwargs
@@ -49,4 +53,8 @@ class Engine(_Engine):
 
     def _connect_exc_is_timeout(self, e):
         pass
+    
+    @classmethod
+    def _quote_identifier(cls, name):
+        return '`{}`'.format(name)
 

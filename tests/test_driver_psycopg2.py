@@ -8,10 +8,10 @@ from .test_driver_generic import GenericTestMixin
 
 @needs_imports('psycopg2')
 def create_pg_engine():
-    return create_engine('psycopg2', dict(
-        host=    os.environ.get('DBAPIX_TEST_PSYCOPG2_HOST'    , 'su01.mm'),
-        database=os.environ.get('DBAPIX_TEST_PSYCOPG2_DATABASE', 'sandbox'),
-    ))
+    kwargs = get_environ_subset('DBAPIX_TEST_PSYCOPG2')
+    kwargs.setdefault('host', 'localhost')
+    kwargs.setdefault('database', 'dbapix')
+    return create_engine('psycopg2', kwargs)
 
 
 class TestPsycopg2Generics(GenericTestMixin, TestCase):
