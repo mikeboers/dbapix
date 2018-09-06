@@ -2,6 +2,21 @@
 from . import *
 
 
+
+class TestGenericDriver(TestCase):
+
+    def create_engine(self):
+        return create_engine('sqlite', 'sqlite-generics.db')
+
+    def test_cursor_chaining(self):
+
+        db = self.create_engine()
+        con = db.get_connection()
+        cur = con.cursor()
+        cur2 = cur.execute('''SELECT 1''')
+        self.assertIs(cur, cur2)
+
+
 class GenericTestMixin(object):
 
     def setUp(self):
@@ -12,7 +27,11 @@ class GenericTestMixin(object):
             db.close()
 
     def create_engine(self):
-        db = self._create_engine()
+        try:
+            db = self._create_engine()
+        except ImportError as e:
+            print(e)
+            raise SkipTest()
         self.engines.append(db)
         return db
 

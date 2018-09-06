@@ -1,6 +1,7 @@
 import os
 
 from unittest import TestCase
+from unittest.case import SkipTest
 
 from dbapix import bind, get_engine_class, create_engine
 

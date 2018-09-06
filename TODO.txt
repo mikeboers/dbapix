@@ -1,4 +1,7 @@
 
+Unsorted
+========
+
 Standardize a few more things:
     
     con.isolation_level
@@ -16,8 +19,29 @@ SQL literal should work everywhere.
 
 Datetime and other parsing should be on by default for SQLite stuff.
 
-
 Pull in con.tables(), con.columns(table), etc., from mmtransfer.
+
+
+Connection Management Confusion
+===============================
+
+- `get_connection` vs `connect` is not clear, alternatives include:
+    - `take_connection` vs `borrow_connection`
+    - `auto_connection()`
+    - `auto_connect()`
+    - `connection_context()`
+    - a method vs calling the engine:
+        with engine() as con:
+            pass
+    - calling the pool:
+        with engine.pool() as con:
+            pass
+    x a method vs a direct context:
+        # Note that this can't work as I don't think we can really track
+        # the state on this to be sure we close it without doing shit like
+        # using sys._getframe to maintain it.
+        with engine as con:
+            pass
 
 
 Documentation
