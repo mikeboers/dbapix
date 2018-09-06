@@ -42,7 +42,13 @@ class Connection(object):
         self.wrapped.autocommit = value
 
     def __enter__(self):
-        # None of the drivers actually do anything here.
+
+        # DB-API2 Connection.__enter__ doesn't actually do anything, and
+        # replies on the implicit start of transactions.
+
+        # Assert that we're not autocommitting.
+        self._begin()
+
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
@@ -52,20 +58,45 @@ class Connection(object):
             self.rollback()
 
     def begin(self):
+        """Assert that we are or will be in a transaction.
         
+        ::
+
+            with con.begin()
+                pass
+            
+            # or
+            
+            con.begin()
+            pass
+            con.commit()
+
+        :return: A context manager that will automatically
+            rollback or commit the current transaction.
+
+        If it can be avoided, this does not actually start a transaction,
+        but instead asserts that the connection is not in autocommit mode.
+        If autocommit cannot be disabled, then an explicit ``BEGIN``
+        will be executed.
+
+        :meth:`commit` and :meth:`rollback` restore autocommit to
+        it's value when :meth:`begin` was called.
+
+        """
+        self._begin()
+        return TransactionContext(self)
+
+    def _begin(self):
+
         # Optimize to use the included methods if we can. We will drop back
         # into autocommit mode later.
         if self.autocommit and self._can_disable_autocommit():
             self._autocommit = True
             self.autocommit = False
 
+        # If we can't drop autocommit, then issue an explicit BEGIN.
         if self.autocommit:
-            self.cursor().execute('BEGIN')
-
-        # DB-API2 Connection.__enter__ doesn't actually do anything.
-        # We rely upon implicit start of transactions.
-
-        return TransactionContext(self)
+            self.execute('BEGIN')
 
     def _end(self):
         if self._autocommit is not None:
@@ -110,9 +141,7 @@ class TransactionContext(object):
         self._con = con
 
     def __enter__(self):
-        # Both sqlite3 and psycopg2 don't actually do anything on __enter__
-        # except return themselves.
-        return self._con.__enter__()
+        return self._con
 
     def __exit__(self, exc_type=None, *args):
         if exc_type:

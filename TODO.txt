@@ -2,25 +2,47 @@
 Unsorted
 ========
 
-Standardize a few more things:
+- Don't allow `with con` at all; require `with con.begin()` so that:
+    1. autocommit is broken out of
+    2. you can't confuse the connection pooling with transactions.
+
+    with con:
+        # What is even happening here?
+
+    with con.begin()
+        # This is clear.
+
+- Standardize a few more things:
     
     con.isolation_level
     con.transaction_status
 
-Query builders.
+- Query builders.
 
     dbx.select('column', dbx.alias('count(1)', 'count'), from_='table').join('table2', on='some condition').where(dbx.or_('foo = {}', 1)).group_by('bar', 'desc')
     dbx.upsert('table', dict(foo='new_value'), where='id = blah')
     dbx.bind('a = {}', 'apple') for generic use around the place
 
-SQL literal should work everywhere.
+- Datetime and other parsing should be on by default for SQLite stuff.
 
-    dbx.SQL('literal SQL')
+- Pull in con.tables(), con.columns(table), etc., from mmtransfer.
 
-Datetime and other parsing should be on by default for SQLite stuff.
+- Engine/Connection.migrate(table, functions)
 
-Pull in con.tables(), con.columns(table), etc., from mmtransfer.
+- Stored procedures.
+        
+    proc = Procedure(base_name, contents, language='sql')
+    name = base_name + '_' + md5(contents) + language
+    proc(con, params, create_if_missing=True) -> result
 
+- Postgres events.
+    - Base class it text events.
+    - Mixin or serializer='json' brings JSON events.
+    - Mixin brings a backfill table and stored procedures.
+        We could have a base implementation that has a dbapix_notifies table.
+
+- Our own type registering system.
+    - dbx.SQL('literal SQL')
 
 Connection Management Confusion
 ===============================
@@ -43,10 +65,3 @@ Connection Management Confusion
         with engine as con:
             pass
 
-
-Documentation
-=============
-
-- In non-autocommit mode, transactions start implicitly, not when you enter
-  the context. con.begin() just puts us back into non-autocommit, and doesn't
-  start a transaction either.
