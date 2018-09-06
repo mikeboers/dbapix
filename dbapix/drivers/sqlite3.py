@@ -48,7 +48,9 @@ class Engine(_Engine):
 
     connection_class = Connection
     
-    _paramstyle = 'qmark'
+    paramstyle = 'qmark'
+    placeholder = '?'
+
     _types = {'serial primary key': 'INTEGER PRIMARY KEY'}
 
     def __init__(self, path):

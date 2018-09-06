@@ -23,6 +23,9 @@ class Engine(object):
     cursor_class = Cursor
     row_class = Row
 
+    paramstyle = abc.abstractproperty(None)
+    placeholder = abc.abstractproperty(None)
+
     def __init__(self):
         self.pool = []
         self.max_idle = 2
@@ -132,8 +135,6 @@ class Engine(object):
         cur = con.cursor()
         cur.execute(query, params, 1)
         return self._build_context(con, cur)
-
-    _paramstyle = None
 
     @classmethod
     def _quote_identifier(cls, name):

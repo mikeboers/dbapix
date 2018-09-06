@@ -13,7 +13,7 @@ class TestFormatQuery(TestCase):
 
         # Identifiers.
 
-        bq = bind('SELECT * FROM {table:table} WHERE id = {id}', dict(table='foo', id=123))
+        bq = bind('SELECT * FROM {table:i} WHERE id = {id}', dict(table='foo', id=123))
         q, p = bq()
         self.assertEqual(q, 'SELECT * FROM "foo" WHERE id = ?')
         self.assertEqual(p, [123])
@@ -77,4 +77,33 @@ class TestFormatQuery(TestCase):
         q, p = bind('SELECT {foodict["foo"]}')()
         self.assertEqual(q, 'SELECT ?')
         self.assertEqual(p, [456])
+    
+    def test_values(self):
+
+        bound = bind('INSERT INTO foo VALUES {x:values}', dict(x=(1, 123)))
+
+        q, p = bound()
+        self.assertEqual(q, 'INSERT INTO foo VALUES (?, ?)')
+        self.assertEqual(p, [1, 123])
+
+        q, p = bound(Postgres)
+        self.assertEqual(q, 'INSERT INTO foo VALUES (%s, %s)')
+
+    def test_multi_values(self):
+
+        bound = bind('INSERT INTO foo VALUES {x:values_list}', dict(x=[
+            (1, 123),
+            (2, 234),
+        ]))
+
+        q, p = bound()
+        self.assertEqual(q, 'INSERT INTO foo VALUES (?, ?), (?, ?)')
+        self.assertEqual(p, [1, 123, 2, 234])
+
+    def test_literal(self):
+
+        func = 'now'
+        bound = bind('SELECT {func:literal}()')
+        q, p = bound()
+        self.assertEqual(q, 'SELECT now()')
         

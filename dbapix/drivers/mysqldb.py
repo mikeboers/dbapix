@@ -38,7 +38,8 @@ class Connection(_Connection):
 
 class Engine(_Engine):
 
-    _paramstyle = 'format'
+    paramstyle = 'format'
+    placeholder = '%s'
     
     connection_class = Connection
 

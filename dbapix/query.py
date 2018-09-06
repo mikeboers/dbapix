@@ -16,17 +16,20 @@ except ImportError:
 py_identifier_re = re.compile(r'^[_a-zA-Z]\w*$')
 
 
+class Literal(str):
+
+    def __sql__(self, engine):
+        return self
+
+
 class Placeholder(str):
 
     def __sql__(self, engine):
         if engine:
-            if engine._paramstyle == 'qmark':
-                return '?'
-            elif engine._paramstyle == 'format':
-                return '%s'
-            else:
-                raise ValueError("Unknown paramstyle {!r}.".format(engine._paramstyle))
+            return engine.placeholder
         return self
+
+default_placeholder = Placeholder('?')
 
 
 class Type(str):
@@ -45,7 +48,25 @@ class Identifier(str):
         return '"{}"'.format(self.replace('"', '""'))
 
 
-default_placeholder = Placeholder('?')
+class Values(int):
+
+    def __sql__(self, engine):
+        placeholder = engine.placeholder if engine else '?'
+        return '({})'.format(', '.join((placeholder, ) * self))
+
+
+class MultiValues(object):
+
+    def __init__(self, rows, cols):
+        self.rows = rows
+        self.cols = cols
+
+    def __sql__(self, engine):
+        placeholder = engine.placeholder if engine else '?'
+        row = '({})'.format(', '.join((placeholder, ) * self.cols))
+        return ', '.join((row, ) * self.rows)
+
+
 
 
 def bind(query, params=None, _stack_depth=0):
@@ -68,7 +89,7 @@ class BoundQuery(object):
 
         escape_placeholders = None
         if engine and any(isinstance(x, Placeholder) for x in self.query_parts):
-            if engine._paramstyle == 'format':
+            if engine.paramstyle == 'format':
                 escape_placeholders = lambda x: x.replace('%', '%%')
 
         for x in self.query_parts:
@@ -148,12 +169,31 @@ class BoundQuery(object):
             if not format_spec:
                 pass
 
-            elif format_spec.lower() in ('i', 'ident', 'identifier', 'table', 'column'):
+            elif format_spec.lower() in ('i', 'ident', 'identifier'):
                 out_parts.append(Identifier(value))
                 continue
 
             elif format_spec.lower() in ('t', 'type'):
                 out_parts.append(Type(value))
+                continue
+
+            elif format_spec.lower() in ('l', 'literal'):
+                out_parts.append(Literal(value))
+                continue
+
+            elif format_spec.lower() in ('v', 'values'):
+                value = tuple(value)
+                out_parts.append(Values(len(value)))
+                out_params.extend(value)
+                continue
+
+            elif format_spec.lower() in ('values_list', ):
+                values = [tuple(x) for x in value]
+                if len(set(map(len, values))) != 1:
+                    raise ValueError("Elements of multi_values are not the same size.")
+                out_parts.append(MultiValues(len(values), len(values[0])))
+                for x in values:
+                    out_params.extend(x)
                 continue
 
             else:

@@ -47,7 +47,8 @@ class Engine(_Engine):
 
     connection_class = Connection
     
-    _paramstyle = 'format'
+    paramstyle = 'format'
+    placeholder = '%s'
     
     def __init__(self, connect_kwargs):
         super(Engine, self).__init__()
