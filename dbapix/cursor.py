@@ -55,10 +55,10 @@ class Cursor(object):
         query, params = bound(self._engine)
         res = self.wrapped.execute(query, params)
 
-        self._fields = []
+        self._field_names = []
         self._field_indexes = {}
         for i, field in enumerate(self.description or ()):
-            self._fields.append(field[0])
+            self._field_names.append(field[0])
             self._field_indexes[field[0]] = i
 
         return self
