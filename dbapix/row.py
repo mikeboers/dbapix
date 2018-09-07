@@ -5,10 +5,18 @@ from six import PY2, string_types
 
 class RowList(list):
 
+    """An extension of ``list`` for holding rows."""
+
     def __init__(self, cur):
         self._field_names = cur._field_names
 
     def as_dataframe(self, **kwargs):
+        """Convert these rows into a ``pandas.DataFrame``.
+
+        See: :meth:`Cursor.as_dataframe`.
+
+        """
+
         # This is essentially copy-pasta from the Cursor.as_dataframe.
         kwargs.setdefault('columns', self._field_names)
         import pandas

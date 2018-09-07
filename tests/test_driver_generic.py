@@ -60,6 +60,18 @@ class GenericTestMixin(object):
         con.close()
         self.assertTrue(con.closed)
 
+    def test_cursor_params(self):
+
+        db = self.create_engine()
+        con = db.get_connection()
+        cur = con.cursor()
+
+        self.assertEqual(cur.arraysize, 1)
+        cur.arraysize = 2
+        self.assertEqual(cur.arraysize, 2)
+
+        # TODO: Assert arraysize actually does something.
+
     def test_auto_binding(self):
 
         db = self.create_engine()
