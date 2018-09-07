@@ -3,6 +3,7 @@ import abc
 import six
 
 from .query import bind
+from .row import RowList
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -26,13 +27,25 @@ class Cursor(object):
         if raw is not None:
             return self._engine.row_class(raw, self)
 
+    def fetchmany(self, size=None):
+        if size is None:
+            size = self.arraysize
+        rows = RowList(self)
+        while len(rows) < size:
+            row = self.fetchone()
+            if row is None:
+                break
+            rows.append(row)
+        return rows
+
     def fetchall(self):
-        rows = []
+        rows = RowList(self)
         while True:
             row = self.fetchone()
             if row is None:
-                return rows
+                break
             rows.append(row)
+        return rows
 
     def __iter__(self):
         while True:
@@ -127,9 +140,18 @@ class Cursor(object):
         return self
 
     def as_dataframe(self, rows=None, **kwargs):
-        import pandas
+
+        # Gotta be careful to give it an actual list.
         if rows is None:
             rows = self.fetchall()
+
+        # Pandas strictly requires specific types... or to be very generic.
+        # We really don't know the performance impact of this.
+        if type(rows) not in (tuple, list):
+            rows = iter(rows)
+
         kwargs.setdefault('columns', [f[0] for f in self.description])
-        return pandas.DataFrame.from_records(rows, **kwargs)
+
+        import pandas
+        return pandas.DataFrame.from_records(iter(rows), **kwargs)
     

@@ -33,3 +33,10 @@ class TestPandas(TestCase):
         df = con.execute('''SELECT * FROM foo''').as_dataframe(index='id')
         self.assertEqual(list(df.columns), ['x', 'y'])
         self.assertEqual(df.shape, (10, 2))
+
+        # We can turn a RowList into a dataframe.
+        cur = con.execute('''SELECT * FROM foo''')
+        df = cur.fetchmany(4).as_dataframe()
+        self.assertEqual(df.shape, (4, 3))
+        df = cur.fetchall().as_dataframe()
+        self.assertEqual(df.shape, (6, 3))

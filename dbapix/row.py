@@ -3,6 +3,18 @@ import collections
 from six import PY2, string_types
 
 
+class RowList(list):
+
+    def __init__(self, cur):
+        self._field_names = cur._field_names
+
+    def as_dataframe(self, **kwargs):
+        # This is essentially copy-pasta from the Cursor.as_dataframe.
+        kwargs.setdefault('columns', self._field_names)
+        import pandas
+        return pandas.DataFrame.from_records(iter(self), **kwargs)
+
+
 class Row(tuple):
 
     """A row in a query result.
