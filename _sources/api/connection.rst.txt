@@ -6,3 +6,13 @@ Connections
 
 .. autoclass:: Connection
 
+
+Transactions
+------------
+
+.. automethod:: Connection.begin
+
+.. automethod:: Connection.commit
+
+.. automethod:: Connection.rollback
+

@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Cursors &#8212; dbapix 0.1 documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -16,21 +16,27 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Rows" href="row.html" />
-    <link rel="prev" title="Connections" href="connection.html" />
-   
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="prev" title="Connections" href="connection.html" /> 
   </head><body>
-  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="row.html" title="Rows"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="connection.html" title="Connections"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">dbapix 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="cursors">
@@ -38,7 +44,10 @@
 <dl class="class">
 <dt id="dbapix.cursor.Cursor">
 <em class="property">class </em><code class="descclassname">dbapix.cursor.</code><code class="descname">Cursor</code><span class="sig-paren">(</span><em>engine</em>, <em>raw</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/cursor.html#Cursor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>A database cursor, used to manage the context of a fetch operation.</p>
+<p>See <a class="reference external" href="https://www.python.org/dev/peps/pep-0249/#cursor-objects">the DB-API 2.0 specs</a>
+for the full specifications. Here we will document the basics and notable differences.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="dbapix.cursor.Cursor.execute">
@@ -48,50 +57,90 @@
 <dl class="method">
 <dt id="dbapix.cursor.Cursor.fetchone">
 <code class="descclassname">Cursor.</code><code class="descname">fetchone</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/cursor.html#Cursor.fetchone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor.fetchone" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Fetch the next row of a query result set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference internal" href="row.html#dbapix.row.Row" title="dbapix.row.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code></a>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when no more data is available.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.cursor.Cursor.fetchmany">
+<code class="descclassname">Cursor.</code><code class="descname">fetchmany</code><span class="sig-paren">(</span><em>size=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/cursor.html#Cursor.fetchmany"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor.fetchmany" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch the next set of rows of a query result set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>size</strong> (<em>int</em>) – Upper limit of rows to fetch; defaults to <code class="xref py py-attr docutils literal notranslate"><span class="pre">Cursor.arraysize</span></code>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference internal" href="row.html#dbapix.row.RowList" title="dbapix.row.RowList"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowList</span></code></a> of zero or more <a class="reference internal" href="row.html#dbapix.row.Row" title="dbapix.row.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.cursor.Cursor.fetchall">
+<code class="descclassname">Cursor.</code><code class="descname">fetchall</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/cursor.html#Cursor.fetchall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor.fetchall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all (remaining) rows of a query result set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A <a class="reference internal" href="row.html#dbapix.row.RowList" title="dbapix.row.RowList"><code class="xref py py-class docutils literal notranslate"><span class="pre">RowList</span></code></a> of zero or more <a class="reference internal" href="row.html#dbapix.row.Row" title="dbapix.row.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="dbapix.cursor.Cursor.as_dataframe">
-<code class="descclassname">Cursor.</code><code class="descname">as_dataframe</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/cursor.html#Cursor.as_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor.as_dataframe" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">Cursor.</code><code class="descname">as_dataframe</code><span class="sig-paren">(</span><em>rows=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/cursor.html#Cursor.as_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.cursor.Cursor.as_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all (remaining) rows as a <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>rows</strong> (<em>list</em>) – Manually picked rows to convert to a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</li>
+<li><strong>**kwargs</strong> – (e.g. <code class="docutils literal notranslate"><span class="pre">index</span></code>, <code class="docutils literal notranslate"><span class="pre">exclude</span></code>, <code class="docutils literal notranslate"><span class="pre">coerce_float</span></code>)
+to pass to <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.from_records.html">pandas.DataFrame.from_records</a>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </div>
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">dbapix</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="core.html">Core API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="engine.html">Engines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="connection.html">Connections</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Cursors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="row.html">Rows</a></li>
-<li class="toctree-l1"><a class="reference internal" href="query.html">Queries</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="connection.html" title="previous chapter">Connections</a></li>
-      <li>Next: <a href="row.html" title="next chapter">Rows</a></li>
-  </ul></li>
-</ul>
-</div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="connection.html"
+                        title="previous chapter">Connections</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="row.html"
+                        title="next chapter">Rows</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/cursor.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
@@ -108,20 +157,24 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="footer">
-      &copy;2018, Mike Boers.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.8</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
-      
-      |
-      <a href="../_sources/api/cursor.rst.txt"
-          rel="nofollow">Page source</a>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="row.html" title="Rows"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="connection.html" title="Connections"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">dbapix 0.1 documentation</a> &#187;</li> 
+      </ul>
     </div>
-
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.8.
+    </div>
   </body>
 </html>

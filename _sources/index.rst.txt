@@ -1,7 +1,7 @@
-dbapix
-======
+DB-API X
+========
 
-**dbapix** is a unification of, and extension to, several DB-API 2.0 drivers.
+``dbapix`` is a unification of, and extension to, several DB-API 2.0 drivers.
 
 We currently wrap:
 
@@ -21,20 +21,24 @@ The second goal is to provide some common niceties:
 - interaction with 3rd-party libraries, e.g. Pandas.
 
 
-Example
--------
+Examples
+--------
 
-::
+
+Create a connection pool, and "borrow" a connection from it (which will be
+automatically returned when exiting the context)::
 
     from dbapix import create_engine
 
-    # Create an engine with the name of the driver.
+    # Create an engine with the name of the driver. Here we're connecting to
+    # a PostgreSQL database via the `psycopg2` package.
     engine = create_engine('postgres', dict(
         host='localhost',
         database='example',
     ))
 
-    # Context managers provide reliable resource management.
+    # Context managers provide reliable resource management; the connection
+    # will be returned to the pool when exiting this context.
     with engine.connect() as con:
 
         foo_id = 123
@@ -42,12 +46,34 @@ Example
         # If not provided explicitly, parameters are pulled
         # from the calling scope for an f-string-like experience
         # but where Bobby Tables won't cause trouble.
-        cur = con.execute('''SELECT bar FROM foo WHERE id = {foo_id}''')
+        cur = con.cursor()
+        cur.execute('''SELECT bar FROM foo WHERE id = {foo_id}''')
 
         for row in cur:
             # Values are accessible by index or name.
             print(row['bar'])
 
+You can also manually manage connections, and directly turn results into
+Pandas dataframes::
+
+    from dbapix import create_engine
+
+    # Lets use SQLite this time, via the `sqlite3` driver.
+    engine = create_engine('sqlite', 'mydatabase.db')
+
+    # Take ownership of a connection. This is now our responsibility to
+    # either close, or return to the pool via `engine.put_connection(con)`.
+    con = engine.get_connection()
+
+    # Connections have an `execute` method which creates a cursor for us.
+    cur = con.execute('''
+        SELECT foo, sum(bar) AS bar
+        FROM myawesometable
+        GROUP BY baz
+    ''')
+    
+    # Turn the result into a Pandas DataFrame!
+    df = cur.as_dataframe()
 
 
 API Reference
