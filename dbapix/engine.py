@@ -4,6 +4,7 @@ import time
 import weakref
 import re
 import abc
+import itertools
 
 import six
 
@@ -13,7 +14,7 @@ from .cursor import Cursor
 from .row import Row
 
 
-log = logging.getLogger()
+_engine_counter = itertools.count(0)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -31,6 +32,8 @@ class Engine(object):
         self.max_idle = 2
         self._checked_out = []
         self._context_refs = {}
+        self._engine_counter = next(_engine_counter)
+        self._log = logging.getLogger('{}[{}]'.format(__name__, self._engine_counter))
 
     def close(self):
         for collection in (self.pool, self._checked_out):
@@ -43,16 +46,27 @@ class Engine(object):
     def get_connection(self, timeout=None, **kwargs):
         
         try:
-            con = self.pool.pop(0)
+            while True:
+                con = self.pool.pop(0)
+                # This actually happens in FarmSoup.
+                if not con.closed:
+                    break
+                self._log.warning("Connection fileno {1} last from {0[0]}:{0[1]} was closed.".format(
+                    con._origin,
+                    con._fileno,
+                ))
         except IndexError:
             real_con = self._new_connection(timeout)
             con = self.connection_class(self, real_con)
+            con._fileno = real_con.fileno()
+
+        stack_depth = 1 + kwargs.pop('_stack_depth', 0)
 
         self._checked_out.append(con)
         con._reset_session(**kwargs)
 
         # Store where it came from so we can warn later.
-        frame = sys._getframe(1)
+        frame = sys._getframe(stack_depth)
         con._origin = (frame.f_code.co_filename, frame.f_lineno)
 
         return con
@@ -95,7 +109,7 @@ class Engine(object):
         nonidle = con._get_nonidle_status()
         if nonidle:
             if warn_status:
-                log.warning("Connection from {0[0]}:{0[1]} returned with non-idle status {1}.".format(
+                self._log.warning("Connection from {0[0]}:{0[1]} returned with non-idle status {1}.".format(
                     con._origin,
                     nonidle,
                 ))
@@ -122,16 +136,18 @@ class Engine(object):
         self.put_connection(con)
 
     def connect(self, *args, **kwargs):
+        kwargs['_stack_depth'] = 1 + kwargs.get('_stack_depth', 0)
         con = self.get_connection(*args, **kwargs)
         return self._build_context(con, con)
 
     def cursor(self, *args, **kwargs):
+        kwargs['_stack_depth'] = 1 + kwargs.get('_stack_depth', 0)
         con = self.get_connection(*args, **kwargs)
         cur = con.cursor()
         return self._build_context(con, cur)
 
     def execute(self, query, params=None):
-        con = self.get_connection()
+        con = self.get_connection(_stack_depth=1)
         cur = con.cursor()
         cur.execute(query, params, 1)
         return self._build_context(con, cur)

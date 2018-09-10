@@ -108,7 +108,7 @@ class Cursor(object):
         params = []
 
         for key, value in sorted(data.items()):
-            names.append(self._engine._quote_identifier(key)) # TODO: Quote better.
+            names.append(self._engine._quote_identifier(key))
             placeholders.append('{}')
             params.append(value)
 
