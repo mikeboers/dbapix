@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import collections
 
 from six import PY2, string_types
@@ -22,6 +24,22 @@ class RowList(list):
         import pandas
         return pandas.DataFrame.from_records(iter(self), **kwargs)
 
+    def print_table(self):
+
+        str_rows = [map(str, row) for row in self]
+
+        max_lens = map(len, self._field_names)
+        for row in str_rows:
+            for i, x in enumerate(row):
+                max_lens[i] = max(max_lens[i], len(x))
+
+        pattern = ' | '.join('{{:{}s}}'.format(n) for n in max_lens)
+
+        print(pattern.format(*self._field_names))
+        print('-|-'.join('-' * x for x in max_lens))
+
+        for row in str_rows:
+            print(pattern.format(*row))
 
 class Row(tuple):
 
