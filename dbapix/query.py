@@ -164,7 +164,7 @@ class BoundQuery(object):
                 value = params[field_spec]
             else:
                 #print(is_index, is_simple, repr(field_spec))
-                value = eval(field_spec, params, {})
+                value = eval(compile(field_spec, '<{}>'.format(field_spec), 'eval'), params, {})
 
             if not format_spec:
                 pass
