@@ -13,6 +13,9 @@ class Connection(_Connection):
         super(Connection, self).__init__(*args, **kwargs)
         self._closed = False
 
+    def fileno(self):
+        return None
+    
     @property
     def closed(self):
         return self._closed

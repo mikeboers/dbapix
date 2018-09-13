@@ -15,6 +15,9 @@ class Connection(_Connection):
         self._isolation_level = None
         self._closed = False
 
+    def fileno(self):
+        return None
+    
     @property
     def closed(self):
         return self._closed

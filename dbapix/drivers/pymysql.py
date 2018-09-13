@@ -9,6 +9,9 @@ from dbapix.engine import Engine as _Engine
 
 class Connection(_Connection):
 
+    def fileno(self):
+        return None
+    
     @property
     def closed(self):
         return self.wrapped._closed

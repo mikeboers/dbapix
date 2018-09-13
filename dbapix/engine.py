@@ -58,7 +58,7 @@ class Engine(object):
         except IndexError:
             real_con = self._new_connection(timeout)
             con = self.connection_class(self, real_con)
-            con._fileno = real_con.fileno()
+            con._fileno = con.fileno() # Postgres closses it.
 
         stack_depth = 1 + kwargs.pop('_stack_depth', 0)
 
