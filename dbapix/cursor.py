@@ -153,11 +153,13 @@ class Cursor(object):
 
     def select(self, table_name, fields, where=None, where_params=()):
 
+        # TODO: How to escape this but allow the selectable to contain a
+        # join, and for the fields to contain dots?
         parts = [
             'SELECT',
-            ', '.join(x if x in ('*', ) else self._engine._quote_identifier(x) for x in fields),
+            ', '.join(fields),
             'FROM',
-            self._engine._quote_identifier(table_name),
+            table_name, #self._engine._quote_identifier(table_name),
         ]
 
         if where:
