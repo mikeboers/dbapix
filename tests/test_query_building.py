@@ -18,3 +18,14 @@ class TestQueryBuilding(TestCase):
         con.update('foo', dict(value=234), 'id = {}', [1])
         row = next(con.execute('''SELECT * FROM foo'''))
         self.assertEqual(tuple(row), (1, 234))
+
+        row = next(con.select('foo', '*'))
+        self.assertEqual(tuple(row), (1, 234))
+
+        row = next(con.select('foo', ['id', 'value']))
+        self.assertEqual(tuple(row), (1, 234))
+
+        con.insert('foo', dict(value=345))
+
+        row = next(con.select('foo', ['value'], 'id = {}', [2]))
+        self.assertEqual(tuple(row), (345, ))

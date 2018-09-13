@@ -133,8 +133,8 @@ class Cursor(object):
 
         to_set = []
         for key, value in sorted(data.items()):
-            to_set.append('{:identifier} = {}')
-            params.extend((key, value))
+            to_set.append('{} = {{}}'.format(self._engine._quote_identifier(key)))
+            params.append(value)
 
         parts = [
             'UPDATE',
@@ -153,10 +153,16 @@ class Cursor(object):
 
     def select(self, table_name, fields, where=None, where_params=()):
 
-        parts = ['SELECT %s' % ', '.join(fields)]
-        parts.append('FROM %s' % table_name)
+        parts = [
+            'SELECT',
+            ', '.join(x if x in ('*', ) else self._engine._quote_identifier(x) for x in fields),
+            'FROM',
+            self._engine._quote_identifier(table_name),
+        ]
+
         if where:
-            parts.append('WHERE %s' % where)
+            parts.append('WHERE')
+            parts.append(where)
 
         query = ' '.join(parts)
         self.execute(query, where_params)
