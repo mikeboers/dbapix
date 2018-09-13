@@ -13,6 +13,16 @@ except ImportError:
     str_formatter_parser = str._formatter_parser
 
 
+
+class SQL(str):
+    """Placeholder for literal SQL.
+
+    WARNING: This currently only works for Psycopg2.
+
+    """
+    pass
+
+
 py_identifier_re = re.compile(r'^[_a-zA-Z]\w*$')
 
 

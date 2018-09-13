@@ -2,7 +2,7 @@ import abc
 
 import six
 
-from .query import bind
+from .query import bind, SQL
 from .row import RowList
 
 
@@ -128,26 +128,27 @@ class Cursor(object):
 
     def update(self, table_name, data, where, where_params=()):
 
-        parts = ['UPDATE "%s"' % table_name]
-
-        names = []
         values = []
         params = []
 
         to_set = []
         for key, value in sorted(data.items()):
-            names.append('"%s"' % key) # TODO: Quote better.
-            if isinstance(value, SQL):
-                to_set.append('"%s" = %s' % (key, value))
-            else:
-                to_set.append('"%s" = %%s' % key)
-                params.append(value)
-        parts.append('SET %s' % ', '.join(to_set))
+            to_set.append('{:identifier} = {}')
+            params.extend((key, value))
 
-        parts.append('WHERE %s' % where)
+        parts = [
+            'UPDATE',
+            self._engine._quote_identifier(table_name),
+            'SET',
+            ', '.join(to_set),
+            'WHERE',
+            where
+        ]
+
         params.extend(where_params)
 
         query = ' '.join(parts)
+
         self.execute(query, params)
 
     def select(self, table_name, fields, where=None, where_params=()):

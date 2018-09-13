@@ -8,11 +8,8 @@ import six
 from dbapix.connection import Connection as _Connection
 from dbapix.cursor import Cursor as _Cursor
 from dbapix.engine import Engine as _Engine
+from dbapix.query import SQL
 
-
-class SQL(str):
-    """Literal SQL"""
-    pass
 
 
 # This is setting up global state, but it is with our own class,
