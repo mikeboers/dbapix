@@ -122,6 +122,7 @@ class Connection(object):
         return cur
 
     def select(self, *args, **kwargs):
+        kwargs['_stack_depth'] = 1
         # No cursor context here since it needs to be read.
         cur = self.cursor()
         return cur.select(*args, **kwargs)
@@ -131,6 +132,7 @@ class Connection(object):
             return cur.insert(*args, **kwargs)
 
     def update(self, *args, **kwargs):
+        kwargs['_stack_depth'] = 1
         with self.cursor() as cur:
             return cur.update(*args, **kwargs)
 

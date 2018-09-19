@@ -12,6 +12,7 @@ except ImportError:
     # We're only using two special methods here.
     str_formatter_parser = str._formatter_parser
 
+from .params import Params
 
 
 class SQL(str):
@@ -118,11 +119,9 @@ class BoundQuery(object):
 
     def parse(self, query, params=None, _stack_depth=0):
 
-        is_magic = params is None
-        is_named = isinstance(params, Mapping)
-        is_indexed = not (is_magic or is_named)
-        if is_indexed and (isinstance(params, basestring) or not isinstance(params, Sequence)):
-            raise ValueError("Params must be None, mapping, or non-str sequence.")
+        # We defer doing the stack magic until we need it.
+        if params is not None and not isinstance(params, Params):
+            params = Params(params)
 
         self.params = out_params = []
         self.query_parts = out_parts = []
@@ -160,20 +159,15 @@ class BoundQuery(object):
 
             if is_index:
                 next_index = field_spec + 1
-                if not is_indexed:
-                    raise ValueError("Cannot use indexes to lookup into non-indexed params.")
 
+            # It is finally time to look up the stack.
             if params is None:
-                # Lets finally load the "magic".
-                frame = sys._getframe(_stack_depth + 1)
-                params = dict(frame.f_globals)
-                params.update(frame.f_locals)
+                params = Params.from_stack(_stack_depth + 1)
 
             if is_simple:
                 # Bypass the magic as much as possible.
                 value = params[field_spec]
             else:
-                #print(is_index, is_simple, repr(field_spec))
                 value = eval(compile(field_spec, '<{}>'.format(field_spec), 'eval'), params, {})
 
             if not format_spec:
@@ -212,5 +206,6 @@ class BoundQuery(object):
             out_parts.append(default_placeholder)
             out_params.append(value)
 
-        if is_indexed:
+        # If there is anything positional left, absorb it.
+        if params is not None:
             out_params.extend(params[next_index:])

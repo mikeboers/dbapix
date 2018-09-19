@@ -2,6 +2,7 @@ import abc
 
 import six
 
+from .params import Params
 from .query import bind, SQL
 from .row import RowList
 
@@ -126,10 +127,10 @@ class Cursor(object):
         if returning:
             return next(self)[0]
 
-    def update(self, table_name, data, where, where_params=()):
+    def update(self, table_name, data, where, where_params=(), _stack_depth=0):
 
         values = []
-        params = []
+        params = Params() if where_params else Params.from_stack(_stack_depth + 1)
 
         to_set = []
         for key, value in sorted(data.items()):
@@ -145,13 +146,13 @@ class Cursor(object):
             where
         ]
 
-        params.extend(where_params)
+        params.update_or_extend(where_params)
 
         query = ' '.join(parts)
 
         self.execute(query, params)
 
-    def select(self, table_name, fields, where=None, where_params=()):
+    def select(self, table_name, fields, where=None, where_params=(), _stack_depth=0):
 
         # TODO: How to escape this but allow the selectable to contain a
         # join, and for the fields to contain dots?
@@ -167,7 +168,7 @@ class Cursor(object):
             parts.append(where)
 
         query = ' '.join(parts)
-        self.execute(query, where_params)
+        self.execute(query, where_params, _stack_depth + 1)
 
         return self
 
