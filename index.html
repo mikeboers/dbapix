@@ -52,7 +52,8 @@ and for them to have the same Python API and semantics regardless of the driver.
 <li>f-string-like parameter binding;</li>
 <li>high-level functions, e.g. <code class="docutils literal notranslate"><span class="pre">insert</span></code>, <code class="docutils literal notranslate"><span class="pre">update</span></code>, etc.;</li>
 <li>dict-like rows;</li>
-<li>interaction with 3rd-party libraries, e.g. Pandas.</li>
+<li>interaction with 3rd-party libraries, e.g. Pandas;</li>
+<li>automatic SSH tunnels.</li>
 </ul>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
@@ -62,10 +63,10 @@ automatically returned when exiting the context):</p>
 
 <span class="c1"># Create an engine with the name of the driver. Here we&#39;re connecting to</span>
 <span class="c1"># a PostgreSQL database via the `psycopg2` package.</span>
-<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;postgres&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;postgres&#39;</span><span class="p">,</span>
     <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
     <span class="n">database</span><span class="o">=</span><span class="s1">&#39;example&#39;</span><span class="p">,</span>
-<span class="p">))</span>
+<span class="p">)</span>
 
 <span class="c1"># Context managers provide reliable resource management; the connection</span>
 <span class="c1"># will be returned to the pool when exiting this context.</span>
@@ -104,6 +105,23 @@ Pandas dataframes:</p>
 
 <span class="c1"># Turn the result into a Pandas DataFrame!</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">as_dataframe</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If you need an SSH tunnel to connect, you can give a set of kwargs to be passed
+to a <a class="reference external" href="https://github.com/pahaz/sshtunnel">SSHTunnelForwarder</a> for the Postgres
+and MySQL engines:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dbapix</span> <span class="k">import</span> <span class="n">create_engine</span>
+
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;postgres&#39;</span><span class="p">,</span>
+    <span class="n">database</span><span class="o">=</span><span class="s1">&#39;only_on_remote&#39;</span><span class="p">,</span>
+    <span class="n">tunnel</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">host</span><span class="o">=</span><span class="s1">&#39;database.example.com&#39;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># The tunnel will be created at the first connection.</span>
+
+<span class="n">engine</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="c1"># Shut it down explicitly.</span>
 </pre></div>
 </div>
 </div>

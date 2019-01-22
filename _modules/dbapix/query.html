@@ -48,6 +48,17 @@
     <span class="c1"># We&#39;re only using two special methods here.</span>
     <span class="n">str_formatter_parser</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">_formatter_parser</span>
 
+<span class="kn">from</span> <span class="nn">.params</span> <span class="k">import</span> <span class="n">Params</span>
+
+
+<span class="k">class</span> <span class="nc">SQL</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Placeholder for literal SQL.</span>
+
+<span class="sd">    WARNING: This currently only works for Psycopg2.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
 
 <span class="n">py_identifier_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[_a-zA-Z]\w*$&#39;</span><span class="p">)</span>
 
@@ -144,11 +155,9 @@
 
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 
-        <span class="n">is_magic</span> <span class="o">=</span> <span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span>
-        <span class="n">is_named</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
-        <span class="n">is_indexed</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="n">is_magic</span> <span class="ow">or</span> <span class="n">is_named</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">is_indexed</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">basestring</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Params must be None, mapping, or non-str sequence.&quot;</span><span class="p">)</span>
+        <span class="c1"># We defer doing the stack magic until we need it.</span>
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">Params</span><span class="p">):</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">Params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">out_params</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">query_parts</span> <span class="o">=</span> <span class="n">out_parts</span> <span class="o">=</span> <span class="p">[]</span>
@@ -186,21 +195,16 @@
 
             <span class="k">if</span> <span class="n">is_index</span><span class="p">:</span>
                 <span class="n">next_index</span> <span class="o">=</span> <span class="n">field_spec</span> <span class="o">+</span> <span class="mi">1</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_indexed</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot use indexes to lookup into non-indexed params.&quot;</span><span class="p">)</span>
 
+            <span class="c1"># It is finally time to look up the stack.</span>
             <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Lets finally load the &quot;magic&quot;.</span>
-                <span class="n">frame</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="n">_stack_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">f_globals</span><span class="p">)</span>
-                <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">f_locals</span><span class="p">)</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="n">Params</span><span class="o">.</span><span class="n">from_stack</span><span class="p">(</span><span class="n">_stack_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">is_simple</span><span class="p">:</span>
                 <span class="c1"># Bypass the magic as much as possible.</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">field_spec</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1">#print(is_index, is_simple, repr(field_spec))</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">field_spec</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">compile</span><span class="p">(</span><span class="n">field_spec</span><span class="p">,</span> <span class="s1">&#39;&lt;</span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field_spec</span><span class="p">),</span> <span class="s1">&#39;eval&#39;</span><span class="p">),</span> <span class="n">params</span><span class="p">,</span> <span class="p">{})</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">format_spec</span><span class="p">:</span>
                 <span class="k">pass</span>
@@ -238,7 +242,8 @@
             <span class="n">out_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">default_placeholder</span><span class="p">)</span>
             <span class="n">out_params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">is_indexed</span><span class="p">:</span>
+        <span class="c1"># If there is anything positional left, absorb it.</span>
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">out_params</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">next_index</span><span class="p">:])</span></div>
 </pre></div>
 

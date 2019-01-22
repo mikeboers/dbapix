@@ -38,7 +38,8 @@
 
 <span class="kn">import</span> <span class="nn">six</span>
 
-<span class="kn">from</span> <span class="nn">.query</span> <span class="k">import</span> <span class="n">bind</span>
+<span class="kn">from</span> <span class="nn">.params</span> <span class="k">import</span> <span class="n">Params</span>
+<span class="kn">from</span> <span class="nn">.query</span> <span class="k">import</span> <span class="n">bind</span><span class="p">,</span> <span class="n">SQL</span>
 <span class="kn">from</span> <span class="nn">.row</span> <span class="k">import</span> <span class="n">RowList</span>
 
 
@@ -144,7 +145,7 @@
         <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">key</span><span class="p">))</span> <span class="c1"># TODO: Quote better.</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
             <span class="n">placeholders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
@@ -162,39 +163,48 @@
         <span class="k">if</span> <span class="n">returning</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">where_params</span><span class="o">=</span><span class="p">()):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">where_params</span><span class="o">=</span><span class="p">(),</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 
-        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;UPDATE &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">]</span>
-
-        <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">Params</span><span class="p">()</span> <span class="k">if</span> <span class="n">where_params</span> <span class="k">else</span> <span class="n">Params</span><span class="o">.</span><span class="n">from_stack</span><span class="p">(</span><span class="n">_stack_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="n">to_set</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span> <span class="c1"># TODO: Quote better.</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">SQL</span><span class="p">):</span>
-                <span class="n">to_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot; = </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">to_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot; = </span><span class="si">%%</span><span class="s1">s&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
-                <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;SET </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_set</span><span class="p">))</span>
+            <span class="n">to_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> = {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">key</span><span class="p">)))</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;WHERE </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">where</span><span class="p">)</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">where_params</span><span class="p">)</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;UPDATE&#39;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">table_name</span><span class="p">),</span>
+            <span class="s1">&#39;SET&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_set</span><span class="p">),</span>
+            <span class="s1">&#39;WHERE&#39;</span><span class="p">,</span>
+            <span class="n">where</span>
+        <span class="p">]</span>
+
+        <span class="n">params</span><span class="o">.</span><span class="n">update_or_extend</span><span class="p">(</span><span class="n">where_params</span><span class="p">)</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">where_params</span><span class="o">=</span><span class="p">()):</span>
+    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">where_params</span><span class="o">=</span><span class="p">(),</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 
-        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SELECT </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">)]</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;FROM </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+        <span class="c1"># TODO: How to escape this but allow the selectable to contain a</span>
+        <span class="c1"># join, and for the fields to contain dots?</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;SELECT&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">),</span>
+            <span class="s1">&#39;FROM&#39;</span><span class="p">,</span>
+            <span class="n">table_name</span><span class="p">,</span> <span class="c1">#self._engine._quote_identifier(table_name),</span>
+        <span class="p">]</span>
+
         <span class="k">if</span> <span class="n">where</span><span class="p">:</span>
-            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;WHERE </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">where</span><span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;WHERE&#39;</span><span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">where</span><span class="p">)</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">where_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">where_params</span><span class="p">,</span> <span class="n">_stack_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span>
 
