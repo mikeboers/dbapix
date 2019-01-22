@@ -18,7 +18,8 @@ The second goal is to provide some common niceties:
 - f-string-like parameter binding;
 - high-level functions, e.g. ``insert``, ``update``, etc.;
 - dict-like rows;
-- interaction with 3rd-party libraries, e.g. Pandas.
+- interaction with 3rd-party libraries, e.g. Pandas;
+- automatic SSH tunnels.
 
 
 Examples
@@ -32,10 +33,10 @@ automatically returned when exiting the context)::
 
     # Create an engine with the name of the driver. Here we're connecting to
     # a PostgreSQL database via the `psycopg2` package.
-    engine = create_engine('postgres', dict(
+    engine = create_engine('postgres',
         host='localhost',
         database='example',
-    ))
+    )
 
     # Context managers provide reliable resource management; the connection
     # will be returned to the pool when exiting this context.
@@ -74,6 +75,24 @@ Pandas dataframes::
     
     # Turn the result into a Pandas DataFrame!
     df = cur.as_dataframe()
+
+
+If you need an SSH tunnel to connect, you can give a set of kwargs to be passed
+to a `SSHTunnelForwarder <https://github.com/pahaz/sshtunnel>`_ for the Postgres
+and MySQL engines::
+
+    from dbapix import create_engine
+
+    engine = create_engine('postgres',
+        database='only_on_remote',
+        tunnel=dict(
+            host='database.example.com',
+        ),
+    )
+
+    # The tunnel will be created at the first connection.
+
+    engine.close() # Shut it down explicitly.
 
 
 API Reference

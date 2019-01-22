@@ -17,7 +17,3 @@ class TestPyMySQLGenerics(GenericTestMixin, TestCase):
     def _create_engine(self):
         return create_mysql_engine()
 
-
-class TestPyMySQL(TestCase):
-
-    pass

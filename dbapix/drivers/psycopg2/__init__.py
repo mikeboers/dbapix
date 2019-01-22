@@ -7,7 +7,7 @@ import six
 
 from dbapix.connection import Connection as _Connection
 from dbapix.cursor import Cursor as _Cursor
-from dbapix.engine import Engine as _Engine
+from dbapix.engine import SocketEngine as _Engine
 from dbapix.query import SQL
 
 
@@ -46,11 +46,9 @@ class Engine(_Engine):
     
     paramstyle = 'format'
     placeholder = '%s'
-    
-    def __init__(self, connect_kwargs):
-        super(Engine, self).__init__()
-        self.connect_kwargs = connect_kwargs
 
+    default_port = 5432
+    
     def _reset_session(self, autocommit=False):
         self.wrapped.set_session(
             isolation_level='DEFAULT',
@@ -60,6 +58,7 @@ class Engine(_Engine):
         )
 
     def _connect(self, timeout):
+        print(self.connect_kwargs)
         return pg.connect(
             **self.connect_kwargs
         )

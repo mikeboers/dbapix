@@ -164,6 +164,60 @@ class Engine(object):
         return cls._types.get(name.lower(), name)
 
 
+class SocketEngine(Engine):
+
+    def __init__(self, connect_kwargs=None, tunnel=None, **kwargs):
+        super(SocketEngine, self).__init__()
+
+        if (connect_kwargs and kwargs) or not (connect_kwargs or kwargs):
+            raise ValueError("Please provide one of connect_kwargs or **kwargs.")
+
+        self.connect_kwargs = connect_kwargs or kwargs
+
+        if isinstance(tunnel, dict):
+            self.tunnel_kwargs = tunnel
+            self.tunnel = None
+        else:
+            self.tunnel_kwargs = None
+            self.tunnel = tunnel
+
+    def close(self):
+        super(SocketEngine, self).close()
+        if self.tunnel:
+            self.tunnel.close()
+            self.tunnel = None
+
+    def _new_connection(self, *args):
+
+        # We're overriding _new_connection instead of making an explicit
+        # `_prep_tunnel` or something. Maybe do that later?
+
+        if self.tunnel_kwargs and not self.tunnel:
+
+            if 'ssh_address_or_host' not in self.tunnel_kwargs:
+                address = self.tunnel_kwargs.pop('ssh_address', None)
+                host = self.tunnel_kwargs.pop('host', None)
+                port = self.tunnel_kwargs.pop('port', 22)
+                if (host and address) or not (host or address):
+                    raise ValueError("Provide one of ssh_address_or_host, ssh_address, or host.")
+                if address and port:
+                    raise ValueError("Provide one of ssh_address_or_host/ssh_address or host/port.")
+                self.tunnel_kwargs['ssh_address_or_host'] = address or (host, port)
+
+            if 'remote_bind_address' not in self.tunnel_kwargs:
+                port = self.connect_kwargs.pop('port', self.default_port)
+                self.tunnel_kwargs['remote_bind_address'] = ('127.0.0.1', port)
+
+            from sshtunnel import SSHTunnelForwarder
+            self.tunnel = SSHTunnelForwarder(**self.tunnel_kwargs)
+            self.tunnel.start()
+
+        if self.tunnel:
+            self.connect_kwargs['port'] = self.tunnel.local_bind_port
+
+        return super(SocketEngine, self)._new_connection(*args)
+
+
 class ConnectionContext(object):
 
     """Context manager for returning connections back to the pool.

@@ -4,7 +4,7 @@ import MySQLdb
 
 from dbapix.connection import Connection as _Connection
 from dbapix.cursor import Cursor as _Cursor
-from dbapix.engine import Engine as _Engine
+from dbapix.engine import SocketEngine as _Engine
 
 
 class Connection(_Connection):
@@ -46,10 +46,8 @@ class Engine(_Engine):
     
     connection_class = Connection
 
-    def __init__(self, connect_kwargs):
-        super(Engine, self).__init__()
-        self.connect_kwargs = connect_kwargs
-
+    default_port = 3306
+    
     def _connect(self, timeout):
         return MySQLdb.Connect(
             **self.connect_kwargs
