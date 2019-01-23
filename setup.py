@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
 
     name='dbapix',
-    version='0.1.0',
+    version='1.0.0',
     description="A unification of, and extension to, several DB-API 2.0 drivers.",
 
     url='http://github.com/mikeboers/dbapix',
