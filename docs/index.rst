@@ -124,7 +124,6 @@ I might make a common file with that registry, e.g. ``mydbs.py``::
         password='hunter2',
     ))
 
-
     registry.register('production', 'postgres', dict(
 
         # Need an SSH tunnel to production!
@@ -140,14 +139,12 @@ I might make a common file with that registry, e.g. ``mydbs.py``::
 
     ))
 
-
     # "Export" this registry method as the API of my module.
     create_engine = registry.create_engine
 
 
 Then in my scripts, e.g. ``awesome_data_science.py``::
 
-    
     import mydbs
 
     engine = mydbs.create_engine('staging')
