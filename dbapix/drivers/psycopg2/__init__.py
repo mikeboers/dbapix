@@ -58,7 +58,6 @@ class Engine(_Engine):
         )
 
     def _connect(self, timeout):
-        print(self.connect_kwargs)
         return pg.connect(
             **self.connect_kwargs
         )
