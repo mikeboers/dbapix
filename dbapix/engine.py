@@ -212,6 +212,13 @@ class SocketEngine(Engine):
 
             from sshtunnel import SSHTunnelForwarder
             self.tunnel = SSHTunnelForwarder(**self.tunnel_kwargs)
+
+            # Force them to die at exit. Not entirely sure if both are nessesary.
+            # On only some hosts these threads remain open and blocking.
+            # TODO: Figure out why this is nessesary for some hosts at all.
+            self.tunnel.daemon_forward_servers = True
+            self.tunnel.daemon_transport = True
+
             self.tunnel.start()
 
         if self.tunnel:
