@@ -205,14 +205,17 @@ class SocketEngine(Engine):
                 self.tunnel_kwargs['ssh_address_or_host'] = address or (host, port)
 
             if 'remote_bind_address' not in self.tunnel_kwargs:
+                host = self.tunnel_kwargs.pop('remote_bind_host', '127.0.0.1')
                 port = self.connect_kwargs.pop('port', self.default_port)
-                self.tunnel_kwargs['remote_bind_address'] = ('127.0.0.1', port)
+                self.tunnel_kwargs['remote_bind_address'] = (host, port)
+
 
             from sshtunnel import SSHTunnelForwarder
             self.tunnel = SSHTunnelForwarder(**self.tunnel_kwargs)
             self.tunnel.start()
 
         if self.tunnel:
+            self.connect_kwargs['host'] = '127.0.0.1'
             self.connect_kwargs['port'] = self.tunnel.local_bind_port
 
         return super(SocketEngine, self)._new_connection(*args)
