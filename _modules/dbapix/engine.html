@@ -56,6 +56,25 @@
 <div class="viewcode-block" id="Engine"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine">[docs]</a><span class="nd">@six</span><span class="o">.</span><span class="n">add_metaclass</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">Engine</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
+    <span class="sd">&quot;&quot;&quot;Database connection manager.</span>
+
+<span class="sd">    This is the base class, and is extended for each of the individual drivers</span>
+<span class="sd">    we support. You don&#39;t create engines directly, but rather through</span>
+<span class="sd">    :func:`.create_engine`.</span>
+
+<span class="sd">    In general, you create the engine with whatever parameters you would pass to the</span>
+<span class="sd">    connect function of the underlying driver, e.g.::</span>
+
+<span class="sd">        engine = create_engine(&#39;sqlite&#39;, &#39;path/to/database.sqlite&#39;)</span>
+
+<span class="sd">        engine = create_engine(&#39;postgres&#39;,</span>
+<span class="sd">            host=&#39;database.example.com&#39;,</span>
+<span class="sd">            database=&#39;mydatabase&#39;,</span>
+<span class="sd">            password=&#39;mypassword&#39;,</span>
+<span class="sd">        )</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">connection_class</span> <span class="o">=</span> <span class="n">Connection</span>
     <span class="n">cursor_class</span> <span class="o">=</span> <span class="n">Cursor</span>
     <span class="n">row_class</span> <span class="o">=</span> <span class="n">Row</span>
@@ -200,7 +219,42 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">SocketEngine</span><span class="p">(</span><span class="n">Engine</span><span class="p">):</span>
+<div class="viewcode-block" id="SocketEngine"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.SocketEngine">[docs]</a><span class="k">class</span> <span class="nc">SocketEngine</span><span class="p">(</span><span class="n">Engine</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Database connection manager for socket-based database connections.</span>
+
+<span class="sd">    This is the base class for the socket-based database drivers, e.g. those</span>
+<span class="sd">    for Postgres and MySQL. The primary extension is support of SSH tunnels via</span>
+<span class="sd">    the ``tunnel`` kwarg, and implemented by the</span>
+<span class="sd">    `sshtunnel &lt;https://sshtunnel.readthedocs.io/en/latest/&gt;`_ project.</span>
+
+<span class="sd">    :param connect_kwargs: The kwargs for the driver&#39;s connect function.</span>
+<span class="sd">    :param tunnel: May be an existing ``sshtunnel.SSHTunnelForwarder``, or</span>
+<span class="sd">        a dict of the ``kwargs`` to contruct one.</span>
+<span class="sd">    :param kwargs: Alternative method to provide kwargs for the driver&#39;s connect function.</span>
+
+<span class="sd">    We provide a few conveniences in the tunnel kwargs:</span>
+
+<span class="sd">    - ``ssh_address_or_host`` will be constructed out of what is availible of</span>
+<span class="sd">      ``address``, ``host``, and ``port``, e.g.::</span>
+
+<span class="sd">        create_engine(&#39;postgres&#39;, tunnel=dict(host=&#39;sshhost.example.com&#39;), ...)</span>
+<span class="sd">        create_engine(&#39;postgres&#39;, tunnel=dict(address=(&#39;sshhost.example.com&#39;, 10022)), ...)</span>
+
+<span class="sd">    - ``remote_bind_address`` will be constructed out of ``remote_bind_port``</span>
+<span class="sd">      and the database&#39;s default port, e.g.::</span>
+
+<span class="sd">        create_engine(&#39;postgres&#39;, tunnel=dict(remote_bind_host=&#39;remote.example.com&#39;, ...), ...)</span>
+
+<span class="sd">    - The driver&#39;s ``host`` and ``port`` will be automatically forced to</span>
+<span class="sd">      ``127.0.0.1`` and the (random) port that the tunnel is listening on.</span>
+
+<span class="sd">    We do **not** specify where your private SSH key is, and paramiko does not</span>
+<span class="sd">    automatically pick it up. You may have to do something like::</span>
+
+<span class="sd">        create_engine(&#39;postgres&#39;, tunnel=dict(ssh_pkey=os.path.expanduser(&#39;~/.ssh/id_rsa&#39;), ...), ...)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connect_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tunnel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SocketEngine</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -241,17 +295,27 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="p">[</span><span class="s1">&#39;ssh_address_or_host&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">address</span> <span class="ow">or</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="s1">&#39;remote_bind_address&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="p">:</span>
+                <span class="n">host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;remote_bind_host&#39;</span><span class="p">,</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">)</span>
                 <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_port</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="p">[</span><span class="s1">&#39;remote_bind_address&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="p">[</span><span class="s1">&#39;remote_bind_address&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+
 
             <span class="kn">from</span> <span class="nn">sshtunnel</span> <span class="k">import</span> <span class="n">SSHTunnelForwarder</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span> <span class="o">=</span> <span class="n">SSHTunnelForwarder</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="p">)</span>
+
+            <span class="c1"># Force them to die at exit. Not entirely sure if both are nessesary.</span>
+            <span class="c1"># On only some hosts these threads remain open and blocking.</span>
+            <span class="c1"># TODO: Figure out why this is nessesary for some hosts at all.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="o">.</span><span class="n">daemon_forward_servers</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="o">.</span><span class="n">daemon_transport</span> <span class="o">=</span> <span class="kc">True</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect_kwargs</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;127.0.0.1&#39;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">connect_kwargs</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="o">.</span><span class="n">local_bind_port</span>
 
-        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">SocketEngine</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_new_connection</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">SocketEngine</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_new_connection</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
 
 <span class="k">class</span> <span class="nc">ConnectionContext</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>

@@ -63,7 +63,9 @@
 it can be generic. Generic names will be resolved to the first availible
 specific implementation (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;mysql&quot;</span></code> resolves to the first of
 <code class="docutils literal notranslate"><span class="pre">&quot;mysqldb&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;pymysql&quot;</span></code> to exist.)</p>
-<p>All <code class="docutils literal notranslate"><span class="pre">args</span></code> and <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> are passed to the engine constructor.</p>
+<p>All <code class="docutils literal notranslate"><span class="pre">args</span></code> and <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> are passed to the engine constructor, which
+are generally passed to the driver’s connect function.</p>
+<p>An exception is <code class="docutils literal notranslate"><span class="pre">tunnel</span></code>; see <a class="reference internal" href="engine.html#dbapix.engine.SocketEngine" title="dbapix.engine.SocketEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">SocketEngine</span></code></a> for more.</p>
 </dd></dl>
 
 </div>

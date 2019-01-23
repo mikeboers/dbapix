@@ -53,10 +53,14 @@ and for them to have the same Python API and semantics regardless of the driver.
 <li>high-level functions, e.g. <code class="docutils literal notranslate"><span class="pre">insert</span></code>, <code class="docutils literal notranslate"><span class="pre">update</span></code>, etc.;</li>
 <li>dict-like rows;</li>
 <li>interaction with 3rd-party libraries, e.g. Pandas;</li>
-<li>automatic SSH tunnels.</li>
+<li>automatic SSH tunnels;</li>
+<li>a registry of connections.</li>
 </ul>
+</div>
 <div class="section" id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basics">
+<h2>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h2>
 <p>Create a connection pool, and “borrow” a connection from it (which will be
 automatically returned when exiting the context):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dbapix</span> <span class="k">import</span> <span class="n">create_engine</span>
@@ -107,8 +111,11 @@ Pandas dataframes:</p>
 <span class="n">df</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">as_dataframe</span><span class="p">()</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="ssh-tunnels">
+<h2>SSH Tunnels<a class="headerlink" href="#ssh-tunnels" title="Permalink to this headline">¶</a></h2>
 <p>If you need an SSH tunnel to connect, you can give a set of kwargs to be passed
-to a <a class="reference external" href="https://github.com/pahaz/sshtunnel">SSHTunnelForwarder</a> for the Postgres
+to a <a class="reference external" href="https://sshtunnel.readthedocs.io/en/latest">SSHTunnelForwarder</a> for the Postgres
 and MySQL engines:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dbapix</span> <span class="k">import</span> <span class="n">create_engine</span>
 
@@ -124,9 +131,63 @@ and MySQL engines:</p>
 <span class="n">engine</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="c1"># Shut it down explicitly.</span>
 </pre></div>
 </div>
+<p>See <a class="reference internal" href="api/engine.html#dbapix.engine.SocketEngine" title="dbapix.engine.SocketEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">SocketEngine</span></code></a> for more.</p>
+</div>
+<div class="section" id="registries">
+<h2>Registries<a class="headerlink" href="#registries" title="Permalink to this headline">¶</a></h2>
+<p>If you have multiple databases that you’re shifting bettween, e.g. staging
+and production, we have a <a class="reference internal" href="api/registry.html#dbapix.registry.Registry" title="dbapix.registry.Registry"><code class="xref py py-class docutils literal notranslate"><span class="pre">Registry</span></code></a> that you can use to contain
+the connection details.</p>
+<p>I might make a common file with that registry, e.g. <code class="docutils literal notranslate"><span class="pre">mydbs.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dbapix.registry</span> <span class="k">import</span> <span class="n">Registry</span>
+
+<span class="n">registry</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">()</span>
+
+<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;staging&#39;</span><span class="p">,</span> <span class="s1">&#39;postgres&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">host</span><span class="o">=</span><span class="s1">&#39;stage.example.com&#39;</span><span class="p">,</span>
+    <span class="n">database</span><span class="o">=</span><span class="s1">&#39;myapp-stage&#39;</span><span class="p">,</span>
+    <span class="n">user</span><span class="o">=</span><span class="s1">&#39;devuser&#39;</span><span class="p">,</span>
+    <span class="n">password</span><span class="o">=</span><span class="s1">&#39;hunter2&#39;</span><span class="p">,</span>
+<span class="p">))</span>
+
+
+<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;production&#39;</span><span class="p">,</span> <span class="s1">&#39;postgres&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
+
+    <span class="c1"># Need an SSH tunnel to production!</span>
+    <span class="n">tunnel</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">host</span><span class="o">=</span><span class="s1">&#39;gateway.prod.example.com&#39;</span><span class="p">,</span> <span class="c1"># The SSH host.</span>
+        <span class="n">remote_bind_host</span><span class="o">=</span><span class="s1">&#39;database.prod.example.com&#39;</span> <span class="c1"># The database host.</span>
+        <span class="n">ssh_pkey</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/.ssh/id_rsa&#39;</span><span class="p">),</span> <span class="c1"># Key isn&#39;t pulled in by default.</span>
+    <span class="p">)</span>
+
+    <span class="n">database</span><span class="o">=</span><span class="s1">&#39;myapp&#39;</span><span class="p">,</span>
+    <span class="n">user</span><span class="o">=</span><span class="s1">&#39;appuser&#39;</span><span class="p">,</span>
+    <span class="n">password</span><span class="o">=</span><span class="s1">&#39;HuNt3r2&#39;</span><span class="p">,</span>
+
+<span class="p">))</span>
+
+
+<span class="c1"># &quot;Export&quot; this registry method as the API of my module.</span>
+<span class="n">create_engine</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">create_engine</span>
+</pre></div>
+</div>
+<p>Then in my scripts, e.g. <code class="docutils literal notranslate"><span class="pre">awesome_data_science.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mydbs</span>
+
+<span class="n">engine</span> <span class="o">=</span> <span class="n">mydbs</span><span class="o">.</span><span class="n">create_engine</span><span class="p">(</span><span class="s1">&#39;staging&#39;</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
+
+    <span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;select 1 as foo&#39;</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">as_dataframe</span><span class="p">()</span>
+
+    <span class="c1"># Do some science!</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="api-reference">
-<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/core.html">Core API</a></li>
@@ -145,6 +206,7 @@ and MySQL engines:</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api/query.html">Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/registry.html">Registries</a></li>
 </ul>
 </div>
 <p>—</p>
@@ -153,7 +215,6 @@ and MySQL engines:</p>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
-</div>
 </div>
 
 
@@ -164,11 +225,14 @@ and MySQL engines:</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">DB-API X</a><ul>
-<li><a class="reference internal" href="#examples">Examples</a></li>
-<li><a class="reference internal" href="#api-reference">API Reference</a></li>
+<li><a class="reference internal" href="#">DB-API X</a></li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#basics">Basics</a></li>
+<li><a class="reference internal" href="#ssh-tunnels">SSH Tunnels</a></li>
+<li><a class="reference internal" href="#registries">Registries</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#api-reference">API Reference</a></li>
 </ul>
 
   <h4>Next topic</h4>

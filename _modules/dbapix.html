@@ -80,7 +80,10 @@
 <span class="sd">    specific implementation (e.g. ``&quot;mysql&quot;`` resolves to the first of</span>
 <span class="sd">    ``&quot;mysqldb&quot;`` or ``&quot;pymysql&quot;`` to exist.)</span>
 
-<span class="sd">    All ``args`` and ``kwargs`` are passed to the engine constructor.</span>
+<span class="sd">    All ``args`` and ``kwargs`` are passed to the engine constructor, which</span>
+<span class="sd">    are generally passed to the driver&#39;s connect function.</span>
+
+<span class="sd">    An exception is ``tunnel``; see :class:`.SocketEngine` for more.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     
