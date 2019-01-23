@@ -19,12 +19,16 @@ The second goal is to provide some common niceties:
 - high-level functions, e.g. ``insert``, ``update``, etc.;
 - dict-like rows;
 - interaction with 3rd-party libraries, e.g. Pandas;
-- automatic SSH tunnels.
+- automatic SSH tunnels;
+- a registry of connections.
 
 
 Examples
---------
+========
 
+
+Basics
+------
 
 Create a connection pool, and "borrow" a connection from it (which will be
 automatically returned when exiting the context)::
@@ -77,6 +81,9 @@ Pandas dataframes::
     df = cur.as_dataframe()
 
 
+SSH Tunnels
+-----------
+
 If you need an SSH tunnel to connect, you can give a set of kwargs to be passed
 to a `SSHTunnelForwarder <https://github.com/pahaz/sshtunnel>`_ for the Postgres
 and MySQL engines::
@@ -95,8 +102,63 @@ and MySQL engines::
     engine.close() # Shut it down explicitly.
 
 
+Registries
+----------
+
+If you have multiple databases that you're shifting bettween, e.g. staging
+and production, we have a :class:`.Registry` that you can use to contain
+the connection details.
+
+I might make a common file with that registry, e.g. ``mydbs.py``::
+
+    from dbapix.registry import Registry
+
+    registry = Registry()
+
+    registry.register('staging', 'postgres', dict(
+        host='stage.example.com',
+        database='myapp-stage',
+        user='devuser',
+        password='hunter2',
+    ))
+
+
+    registry.register('production', 'postgres', dict(
+
+        # Need an SSH tunnel to production!
+        tunnel=dict(
+            remote_bind_host='prod.example.com'
+        )
+
+        database='myapp',
+        user='appuser',
+        password='a-production-password',
+
+    ))
+
+
+    # "Export" this registry method as the API of my module.
+    create_engine = registry.create_engine
+
+
+Then in my scripts, e.g. ``awesome_data_science.py``::
+
+    
+    import mydbs
+
+    engine = mydbs.create_engine('staging')
+
+    with engine.connect() as con:
+
+        cur = con.execute('select 1 as foo')
+        df = cur.as_dataframe()
+
+        # Do some science!
+
+
+
 API Reference
--------------
+=============
 .. toctree::
 
    api/core
@@ -105,6 +167,8 @@ API Reference
    api/cursor
    api/row
    api/query
+   api/registry
+
 
 ---
 
