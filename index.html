@@ -150,7 +150,6 @@ the connection details.</p>
     <span class="n">password</span><span class="o">=</span><span class="s1">&#39;hunter2&#39;</span><span class="p">,</span>
 <span class="p">))</span>
 
-
 <span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;production&#39;</span><span class="p">,</span> <span class="s1">&#39;postgres&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
 
     <span class="c1"># Need an SSH tunnel to production!</span>
@@ -165,7 +164,6 @@ the connection details.</p>
     <span class="n">password</span><span class="o">=</span><span class="s1">&#39;HuNt3r2&#39;</span><span class="p">,</span>
 
 <span class="p">))</span>
-
 
 <span class="c1"># &quot;Export&quot; this registry method as the API of my module.</span>
 <span class="n">create_engine</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">create_engine</span>
