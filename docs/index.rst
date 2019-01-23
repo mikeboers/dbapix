@@ -85,7 +85,7 @@ SSH Tunnels
 -----------
 
 If you need an SSH tunnel to connect, you can give a set of kwargs to be passed
-to a `SSHTunnelForwarder <https://github.com/pahaz/sshtunnel>`_ for the Postgres
+to a `SSHTunnelForwarder <https://sshtunnel.readthedocs.io/en/latest>`_ for the Postgres
 and MySQL engines::
 
     from dbapix import create_engine
@@ -100,6 +100,8 @@ and MySQL engines::
     # The tunnel will be created at the first connection.
 
     engine.close() # Shut it down explicitly.
+
+See :class:`.SocketEngine` for more.
 
 
 Registries
@@ -127,12 +129,14 @@ I might make a common file with that registry, e.g. ``mydbs.py``::
 
         # Need an SSH tunnel to production!
         tunnel=dict(
-            remote_bind_host='prod.example.com'
+            host='gateway.prod.example.com', # The SSH host.
+            remote_bind_host='database.prod.example.com' # The database host.
+            ssh_pkey=os.path.expanduser('~/.ssh/id_rsa'), # Key isn't pulled in by default.
         )
 
         database='myapp',
         user='appuser',
-        password='a-production-password',
+        password='HuNt3r2',
 
     ))
 

@@ -45,7 +45,10 @@ def create_engine(driver, *args, **kwargs):
     specific implementation (e.g. ``"mysql"`` resolves to the first of
     ``"mysqldb"`` or ``"pymysql"`` to exist.)
 
-    All ``args`` and ``kwargs`` are passed to the engine constructor.
+    All ``args`` and ``kwargs`` are passed to the engine constructor, which
+    are generally passed to the driver's connect function.
+
+    An exception is ``tunnel``; see :class:`.SocketEngine` for more.
 
     """
     

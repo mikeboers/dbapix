@@ -20,6 +20,25 @@ _engine_counter = itertools.count(0)
 @six.add_metaclass(abc.ABCMeta)
 class Engine(object):
 
+    """Database connection manager.
+
+    This is the base class, and is extended for each of the individual drivers
+    we support. You don't create engines directly, but rather through
+    :func:`.create_engine`.
+
+    In general, you create the engine with whatever parameters you would pass to the
+    connect function of the underlying driver, e.g.::
+
+        engine = create_engine('sqlite', 'path/to/database.sqlite')
+
+        engine = create_engine('postgres',
+            host='database.example.com',
+            database='mydatabase',
+            password='mypassword',
+        )
+
+    """
+
     connection_class = Connection
     cursor_class = Cursor
     row_class = Row
@@ -165,6 +184,41 @@ class Engine(object):
 
 
 class SocketEngine(Engine):
+
+    """Database connection manager for socket-based database connections.
+
+    This is the base class for the socket-based database drivers, e.g. those
+    for Postgres and MySQL. The primary extension is support of SSH tunnels via
+    the ``tunnel`` kwarg, and implemented by the
+    `sshtunnel <https://sshtunnel.readthedocs.io/en/latest/>`_ project.
+
+    :param connect_kwargs: The kwargs for the driver's connect function.
+    :param tunnel: May be an existing ``sshtunnel.SSHTunnelForwarder``, or
+        a dict of the ``kwargs`` to contruct one.
+    :param kwargs: Alternative method to provide kwargs for the driver's connect function.
+
+    We provide a few conveniences in the tunnel kwargs:
+
+    - ``ssh_address_or_host`` will be constructed out of what is availible of
+      ``address``, ``host``, and ``port``, e.g.::
+
+        create_engine('postgres', tunnel=dict(host='sshhost.example.com'), ...)
+        create_engine('postgres', tunnel=dict(address=('sshhost.example.com', 10022)), ...)
+
+    - ``remote_bind_address`` will be constructed out of ``remote_bind_port``
+      and the database's default port, e.g.::
+
+        create_engine('postgres', tunnel=dict(remote_bind_host='remote.example.com', ...), ...)
+
+    - The driver's ``host`` and ``port`` will be automatically forced to
+      ``127.0.0.1`` and the (random) port that the tunnel is listening on.
+
+    We do **not** specify where your private SSH key is, and paramiko does not
+    automatically pick it up. You may have to do something like::
+
+        create_engine('postgres', tunnel=dict(ssh_pkey=os.path.expanduser('~/.ssh/id_rsa'), ...), ...)
+
+    """
 
     def __init__(self, connect_kwargs=None, tunnel=None, **kwargs):
         super(SocketEngine, self).__init__()

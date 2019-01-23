@@ -6,6 +6,8 @@ Engines
 
 .. autoclass:: Engine
 
+.. autoclass:: SocketEngine
+
 
 Manual Connections
 ------------------
