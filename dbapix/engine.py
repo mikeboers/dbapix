@@ -1,10 +1,12 @@
+import abc
+import atexit
+import itertools
 import logging
+import re
 import sys
 import time
 import weakref
-import re
-import abc
-import itertools
+import weakref
 
 import six
 
@@ -183,6 +185,16 @@ class Engine(object):
         return cls._types.get(name.lower(), name)
 
 
+# We need to hold onto open tunnels so we can force them
+# to close at shutdown.
+_close_at_exit = weakref.WeakSet()
+
+@atexit.register
+def _do_close_at_exit():
+    for obj in _close_at_exit:
+        obj.close()
+
+
 class SocketEngine(Engine):
 
     """Database connection manager for socket-based database connections.
@@ -267,11 +279,14 @@ class SocketEngine(Engine):
             from sshtunnel import SSHTunnelForwarder
             self.tunnel = SSHTunnelForwarder(**self.tunnel_kwargs)
 
-            # Force them to die at exit. Not entirely sure if both are nessesary.
+            # Force them to die at exit. Not sure all of this is nessesary.
             # On only some hosts these threads remain open and blocking.
-            # TODO: Figure out why this is nessesary for some hosts at all.
+            # In theory setting the daemon_* attributes should be enough,
+            # but there is at least one host where we need to explicitly
+            # close everything down, hence the atexit stuff.
             self.tunnel.daemon_forward_servers = True
             self.tunnel.daemon_transport = True
+            _close_at_exit.add(self.tunnel)
 
             self.tunnel.start()
 
