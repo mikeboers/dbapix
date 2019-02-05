@@ -117,14 +117,14 @@ I might make a common file with that registry, e.g. ``mydbs.py``::
 
     registry = Registry()
 
-    registry.register('staging', 'postgres', dict(
+    registry.register('staging', 'postgres',
         host='stage.example.com',
         database='myapp-stage',
         user='devuser',
         password='hunter2',
-    ))
+    )
 
-    registry.register('production', 'postgres', dict(
+    registry.register('production', 'postgres',
 
         # Need an SSH tunnel to production!
         tunnel=dict(
@@ -137,7 +137,7 @@ I might make a common file with that registry, e.g. ``mydbs.py``::
         user='appuser',
         password='HuNt3r2',
 
-    ))
+    )
 
     # "Export" this registry method as the API of my module.
     create_engine = registry.create_engine

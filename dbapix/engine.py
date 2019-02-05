@@ -26,8 +26,8 @@ class Engine(object):
     we support. You don't create engines directly, but rather through
     :func:`.create_engine`.
 
-    In general, you create the engine with whatever parameters you would pass to the
-    connect function of the underlying driver, e.g.::
+    In general, you create the engine with whatever args/kwargs you would pass
+    to the connect function of the underlying driver, e.g.::
 
         engine = create_engine('sqlite', 'path/to/database.sqlite')
 
