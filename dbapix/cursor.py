@@ -152,6 +152,8 @@ class Cursor(object):
 
         self.execute(query, params)
 
+        return self
+
     def select(self, table_name, fields, where=None, where_params=(), _stack_depth=0):
 
         # TODO: How to escape this but allow the selectable to contain a
