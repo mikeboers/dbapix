@@ -64,6 +64,7 @@ class Engine(_Engine):
         return sqlite3.connect(self.path,
             timeout=timeout or 0,
             check_same_thread=False,
+            detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
         )
 
     def _connect_exc_is_timeout(self, e):
