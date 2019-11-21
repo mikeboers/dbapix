@@ -191,7 +191,7 @@ class BoundQuery(object):
                 out_params.extend(value)
                 continue
 
-            elif format_spec.lower() in ('values_list', ):
+            elif format_spec.lower() in ('vl', 'values_list'):
                 values = [tuple(x) for x in value]
                 if len(set(map(len, values))) != 1:
                     raise ValueError("Elements of multi_values are not the same size.")
