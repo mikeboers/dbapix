@@ -79,6 +79,25 @@ class Row(tuple):
             x = self._field_indexes[x]
         return super(Row, self).__getitem__(x)
 
+    def __eq__(self, other):
+
+        if len(self) != len(other):
+            return False
+
+        if isinstance(other, dict):
+            for key, value in self.iteritems():
+                try:
+                    if value != other[key]:
+                        return False
+                except KeyError:
+                    return False
+            return True
+
+        if isinstance(other, (tuple, list)):
+            return all(a == b for a, b in zip(self, other))
+
+        raise TypeError("Row can only be directly equated to tuple, list, and dict.")
+
     def get(self, key, default=None):
         try:
             return self[key]

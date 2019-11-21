@@ -55,12 +55,15 @@ class TestRow(TestCase):
         self.assertIn('foo', row.viewvalues())
 
         self.assertEqual(list(row), [1, 'foo'])
+        self.assertEqual(row, [1, 'foo'])
+        self.assertEqual(row, (1, 'foo'))
 
         self.assertEqual(list(row.keys()), ['id', 'value'])
         self.assertEqual(list(row.values()), [1, 'foo'])
         self.assertEqual(list(row.items()), [('id', 1), ('value', 'foo')])
 
         self.assertEqual(row.copy(), dict(id=1, value='foo'))
+        self.assertEqual(row, dict(id=1, value='foo'))
 
         if six.PY2:
 
