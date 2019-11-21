@@ -158,7 +158,7 @@ class BoundQuery(object):
                 is_index = is_simple = True
 
             if is_index:
-                next_index = field_spec + 1
+                next_index = max(next_index, field_spec + 1)
 
             # It is finally time to look up the stack.
             if params is None:

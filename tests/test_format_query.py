@@ -59,6 +59,21 @@ class TestFormatQuery(TestCase):
         q, p = bound(Postgres)
         self.assertEqual(q, '''SELECT '%%s', %s ''')
 
+    def test_indexes(self):
+
+        q, p = bind('SELECT {0}, {1}', ('foo', 'bar'))()
+        self.assertEqual(q, 'SELECT ?, ?')
+        self.assertEqual(p, ['foo', 'bar'])
+
+        q, p = bind('SELECT {1}, {0}', ('foo', 'bar'))()
+        self.assertEqual(q, 'SELECT ?, ?')
+        self.assertEqual(p, ['bar', 'foo'])
+
+        q, p = bind('SELECT {0}, {1}, {0}', ('foo', 'bar'))()
+        self.assertEqual(q, 'SELECT ?, ?, ?')
+        self.assertEqual(p, ['foo', 'bar', 'foo'])
+
+
     def test_scope(self):
 
         foo = 234
