@@ -14,7 +14,7 @@ class Connection(object):
         # For tracking state around `begin()`.
         self._autocommit = None
     
-    def _reset_session(self, autocommit=False):
+    def reset_session(self, autocommit=False):
         self.autocommit = autocommit
 
     def _should_put_close(self):

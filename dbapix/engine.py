@@ -84,7 +84,7 @@ class Engine(object):
         stack_depth = 1 + kwargs.pop('_stack_depth', 0)
 
         self._checked_out.append(con)
-        con._reset_session(**kwargs)
+        con.reset_session(**kwargs)
 
         # Store where it came from so we can warn later.
         frame = sys._getframe(stack_depth)
@@ -156,14 +156,14 @@ class Engine(object):
         con = self._context_refs.pop(ref)
         self.put_connection(con)
 
-    def connect(self, *args, **kwargs):
+    def connect(self, **kwargs):
         kwargs['_stack_depth'] = 1 + kwargs.get('_stack_depth', 0)
-        con = self.get_connection(*args, **kwargs)
+        con = self.get_connection(**kwargs)
         return self._build_context(con, con)
 
-    def cursor(self, *args, **kwargs):
+    def cursor(self, **kwargs):
         kwargs['_stack_depth'] = 1 + kwargs.get('_stack_depth', 0)
-        con = self.get_connection(*args, **kwargs)
+        con = self.get_connection(**kwargs)
         cur = con.cursor()
         return self._build_context(con, cur)
 
@@ -174,14 +174,13 @@ class Engine(object):
         return self._build_context(con, cur)
 
     @classmethod
-    def _quote_identifier(cls, name):
-        # This is valid for sqlite3 and psycopg2.
+    def quote_identifier(cls, name):
         return '"{}"'.format(name.replace('"', '""'))
 
     _types = {}
 
     @classmethod
-    def _adapt_type(cls, name):
+    def adapt_type(cls, name):
         return cls._types.get(name.lower(), name)
 
 

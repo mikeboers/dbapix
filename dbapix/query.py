@@ -47,7 +47,7 @@ class Type(str):
 
     def __sql__(self, engine):
         if engine:
-            return engine._adapt_type(self)
+            return engine.adapt_type(self)
         return self
 
 
@@ -55,7 +55,7 @@ class Identifier(str):
 
     def __sql__(self, engine):
         if engine:
-            return engine._quote_identifier(self)
+            return engine.quote_identifier(self)
         return '"{}"'.format(self.replace('"', '""'))
 
 

@@ -102,14 +102,14 @@ class Cursor(object):
 
     def insert(self, table_name, data, returning=None):
 
-        parts = ['INSERT INTO %s' % self._engine._quote_identifier(table_name)]
+        parts = ['INSERT INTO %s' % self._engine.quote_identifier(table_name)]
 
         names = []
         placeholders = []
         params = []
 
         for key, value in sorted(data.items()):
-            names.append(self._engine._quote_identifier(key))
+            names.append(self._engine.quote_identifier(key))
             placeholders.append('{}')
             params.append(value)
 
@@ -119,7 +119,7 @@ class Cursor(object):
         ))
 
         if returning:
-            parts.append('RETURNING {}'.format(self._engine._quote_identifier(returning)))
+            parts.append('RETURNING {}'.format(self._engine.quote_identifier(returning)))
 
         query = ' '.join(parts)
         self.execute(query, params)
@@ -134,12 +134,12 @@ class Cursor(object):
 
         to_set = []
         for key, value in sorted(data.items()):
-            to_set.append('{} = {{}}'.format(self._engine._quote_identifier(key)))
+            to_set.append('{} = {{}}'.format(self._engine.quote_identifier(key)))
             params.append(value)
 
         parts = [
             'UPDATE',
-            self._engine._quote_identifier(table_name),
+            self._engine.quote_identifier(table_name),
             'SET',
             ', '.join(to_set),
             'WHERE',
@@ -162,7 +162,7 @@ class Cursor(object):
             'SELECT',
             ', '.join(fields),
             'FROM',
-            table_name, #self._engine._quote_identifier(table_name),
+            table_name, #self._engine.quote_identifier(table_name),
         ]
 
         if where:

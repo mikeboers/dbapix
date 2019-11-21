@@ -52,7 +52,7 @@ class Engine(_Engine):
         pass
 
     @classmethod
-    def _quote_identifier(cls, name):
+    def quote_identifier(cls, name):
         return '`{}`'.format(name)
 
 

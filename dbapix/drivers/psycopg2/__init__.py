@@ -48,8 +48,8 @@ class Engine(_Engine):
     placeholder = '%s'
 
     default_port = 5432
-    
-    def _reset_session(self, autocommit=False):
+
+    def reset_session(self, autocommit=False):
         self.wrapped.set_session(
             isolation_level='DEFAULT',
             readonly=False,
