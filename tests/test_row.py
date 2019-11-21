@@ -57,6 +57,7 @@ class TestRow(TestCase):
         self.assertEqual(list(row), [1, 'foo'])
         self.assertEqual(row, [1, 'foo'])
         self.assertEqual(row, (1, 'foo'))
+        self.assertEqual(row[:], (1, 'foo'))
 
         self.assertEqual(list(row.keys()), ['id', 'value'])
         self.assertEqual(list(row.values()), [1, 'foo'])

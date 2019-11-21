@@ -15,7 +15,7 @@ class RowList(list):
     def as_dataframe(self, **kwargs):
         """Convert these rows into a ``pandas.DataFrame``.
 
-        See: :meth:`Cursor.as_dataframe`.
+        .. seealso:: :meth:`.Cursor.as_dataframe`.
 
         """
 
@@ -51,13 +51,13 @@ class Row(tuple):
             print(row[0])
             print(row['foo']) # The same thing.
 
-    **Warning:** checking if a string is in a row via ``'foo' in row`` will
-    check for BOTH the key ``'foo'`` and the value ``'foo'``! If you need to be
-    explicit, then you should look in the various views::
+    .. warning:: Checking if a string is in a row via ``'foo' in row`` will
+        check for both the key ``'foo'`` and the value ``'foo'``! If you need to be
+        explicit, then you should look in the various views::
 
-        'foo' in row.viewkeys()
-        # of
-        'foo' in row.viewvalues()
+            'foo' in row.keys()
+            # or
+            'foo' in row.values()
 
     """
 
@@ -75,6 +75,12 @@ class Row(tuple):
         return '<Row {}>'.format(', '.join('{}={!r}'.format(self._field_names[i], v) for i, v in enumerate(self)))
 
     def __getitem__(self, x):
+        """Get an item via index or key.
+
+        :param x: If an ``int``, lookup by index. If a ``str``, lookup by name.
+        :raises: ``KeyError`` or ``IndexError``
+
+        """
         if isinstance(x, string_types):
             x = self._field_indexes[x]
         return super(Row, self).__getitem__(x)
@@ -99,8 +105,15 @@ class Row(tuple):
         raise TypeError("Row can only be directly equated to tuple, list, and dict.")
 
     def get(self, key, default=None):
+        """Get a value by column name.
+
+        :param str key: The name of the column.
+        :param default: What to return if the name doesn't exist.
+        :raises: ``KeyError`` if the column doesn't exist.
+
+        """
         try:
-            return self[key]
+            return super(Row, self).__getitem__(self._field_indexes[key])
         except KeyError:
             return default
 
@@ -109,40 +122,38 @@ class Row(tuple):
             return True
         return super(Row, self).__contains__(x)
 
+    def keys(self):
+        return RowKeysView(self)
     def iterkeys(self):
         return RowKeysView(self)
     def viewkeys(self):
         return RowKeysView(self)
 
-    def keys(self):
-        if PY2:
-            return self._field_names[:] # Don't want them changing it!
-        else:
-            return RowKeysView(self)
-
+    def values(self):
+        return RowValuesView(self)
     def itervalues(self):
         return RowValuesView(self)
     def viewvalues(self):
         return RowValuesView(self)
 
-    def values(self):
-        if PY2:
-            return list(self)
-        else:
-            return RowValuesView(self)
-
+    def items(self):
+        return RowItemsView(self)
     def iteritems(self):
         return RowItemsView(self)
     def viewitems(self):
         return RowItemsView(self)
 
-    def items(self):
-        if PY2:
+    # Python 2 does not return iterators.
+    if PY2:
+        def keys(self):
+            return self._field_names[:] # Don't want them changing it!
+        def values(self):
+            return list(self)
+        def items(self):
             return [(k, self[i]) for i, k in enumerate(self._field_names)]
-        else:
-            return RowItemsView(self)
 
     def copy(self):
+        """Get a copy of the row as a dict."""
         return {k: self[k] for k in self.keys()}
 
 

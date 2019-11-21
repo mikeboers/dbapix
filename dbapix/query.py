@@ -81,9 +81,7 @@ class MultiValues(object):
 
 
 def bind(query, params=None, _stack_depth=0):
-    bound = BoundQuery()
-    bound.parse(query, params, _stack_depth + 1)
-    return bound
+    return BoundQuery(query, params, _stack_depth + 1)
 
 
 class BoundQuery(object):
@@ -104,14 +102,17 @@ class BoundQuery(object):
                 escape_placeholders = lambda x: x.replace('%', '%%')
 
         for x in self.query_parts:
+
             sql_func = getattr(x, '__sql__', None)
             if sql_func:
                 out.append(sql_func(engine))
+
             else:
                 x = str(x)
                 if escape_placeholders:
                     x = escape_placeholders(x)
                 out.append(x)
+
         return ''.join(out)
 
     def __call__(self, engine=None):

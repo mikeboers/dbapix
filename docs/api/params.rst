@@ -112,13 +112,13 @@ Format spec examples:
     cur.execute('''CREATE TABLE type_example (id {'SERIAL PRIMARY KEY':type}, value INTEGER)''')
 
     # Literals:
-    cur.execute('''SELECT {:l}''', ['''date('now')'''])
+    cur.execute('''SELECT {:literal}''', ['''date('now')'''])
 
     # Values:
-    cur.execute('''INSERT INTO bar VALUES {:v}''', [(1, 2, 3)])
+    cur.execute('''INSERT INTO bar VALUES {:values}''', [(1, 2, 3)])
 
     # Values list:
-    cur.execute('''INSERT INTO bar VALUES {:vl}''', [[(1, 2, 3), (4, 5, 6)]])
+    cur.execute('''INSERT INTO bar VALUES {:values_list}''', [[(1, 2, 3), (4, 5, 6)]])
 
 
 
@@ -129,7 +129,7 @@ Format spec examples:
 F-String Style
 --------------
 
-This style is an extension of the :ref:`format_style` and mimics the ``f"{foo}"`` style described by `Formatted string literals <https://docs.python.org/3/reference/lexical_analysis.html#f-strings>`_ in the Python docs; it evalutes the expressions in the namespace that `execute` (or similar) was called:
+This style is an extension of the :ref:`format_style` and mimics the ``f'{foo}'`` style described by `Formatted string literals <https://docs.python.org/3/reference/lexical_analysis.html#f-strings>`_ in the Python docs; it evalutes the expressions in the namespace that `execute` (or similar) was called:
 
 .. testcode::
 
@@ -137,12 +137,24 @@ This style is an extension of the :ref:`format_style` and mimics the ``f"{foo}"`
     cur.execute('''SELECT {foo}''')  # NOTE no params passed here!
     assert next(cur)[0] == 123
 
-Note that unlike Python f-strings, this is only able to pull values from the single calling scope. It is not able to bind to values in enclosing scopes::
+Note that unlike Python f-strings, this is only able to pull values from the calling scope and it's global scope. It is not able to bind to values in other enclosing scopes::
 
-    foo = 123
-    def go():
-        bar = 456
-        cur.execute('''SELECT {foo}, {bar}''')  # This will fail because of foo.
+    foo = 1
+
+    def outer():
+
+        # This is not visible as a parameter.
+        bar = 2
+
+        def inner():
+
+            baz = 3
+
+            # This will fail due to `bar`.
+            cur.execute('''SELECT {foo}, {bar}, {baz}''')
+
+        inner()
+
 
 .. warning:: You **must** not use the ``f`` prefix on the strings. These are not actually f-strings, but merely mimic them. If you accidentally use f-strings directly you will expose your code to SQL injection vulnerabilities.
 
