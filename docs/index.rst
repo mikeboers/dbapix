@@ -168,6 +168,7 @@ API Reference
    api/cursor
    api/row
    api/query
+   api/params
    api/registry
 
 

@@ -6,15 +6,49 @@ import six
 @six.add_metaclass(abc.ABCMeta)
 class Connection(object):
     
+    """A normalized connection to a database.
+
+    See `the DB-API 2.0 specs <https://www.python.org/dev/peps/pep-0249/#connection-objects>`_
+    for the minimal methods provided there.
+
+    """
+    
     def __init__(self, engine, con):
 
         self._engine = engine
+
         self.wrapped = con
 
         # For tracking state around `begin()`.
         self._autocommit = None
     
+    # The next 3 are here mostly for the docs.
+    
+    @property
+    def closed(self):
+        """Has this connection been closed?"""
+        return self.wrapped.closed
+
+    def fileno(self):
+        return self.wrapped.fileno()
+
+    def close(self):
+        """Close the connection immediately.
+
+        This prevents the engine from reusing connections, and so is discouraged
+        unless you are sure the connection should not be reused.
+
+        """
+        self.wrapped.close()
+    
     def reset_session(self, autocommit=False):
+        """Reset the connection to an initial clean state.
+
+        This is automatically called when connections are retreived from an engine,
+        and is designed so that every connection feels like a new one, even
+        though they are reused.
+
+        """
         self.autocommit = autocommit
 
     def _should_put_close(self):
@@ -24,9 +58,19 @@ class Connection(object):
         pass
 
     def __getattr__(self, key):
+        """Attributes that are not provided by dbapix are passed through to the wrapped connection."""
         return getattr(self.wrapped, key)
 
     def cursor(self):
+        """Get a :class:`.Cursor` for this connection.
+
+        .. testcode::
+
+            cur = con.cursor()
+            cur.execute('SELECT 1')
+            assert next(cur)[0] == 1
+
+        """
         raw_cur = self.wrapped.cursor()
         return self._engine.cursor_class(self._engine, raw_cur)
 
@@ -36,6 +80,11 @@ class Connection(object):
 
     @property
     def autocommit(self):
+        """Is every query executed in an implicit transaction that is auto committed?
+
+        Defaults to ``True`` on new connections.
+        """
+
         return self.wrapped.autocommit
     @autocommit.setter
     def autocommit(self, value):
@@ -59,17 +108,6 @@ class Connection(object):
 
     def begin(self):
         """Assert that we are or will be in a transaction.
-        
-        ::
-
-            with con.begin()
-                pass
-            
-            # or
-            
-            con.begin()
-            pass
-            con.commit()
 
         :return: A context manager that will automatically
             rollback or commit the current transaction.
@@ -104,34 +142,58 @@ class Connection(object):
             self._autocommit = None
 
     def commit(self):
+        """Commit changes made since the transaction started."""
         if self.autocommit:
             raise RuntimeError("Connection is in autocommit mode.")
         self.wrapped.commit()
         self._end()
 
     def rollback(self):
+        """Rollback changes made since the transaction started."""
         if self.autocommit:
             raise RuntimeError("Connection is in autocommit mode.")
         self.wrapped.rollback()
         self._end()
 
     def execute(self, query, params=None):
+        """Create a cursor, and execute a query on it in one step.
+
+        :return: The created :class:`.Cursor`.
+
+        .. seealso:: :meth:`.Cursor.execute` for parameters and examples.
+
+        """
         # No cursor context here since it needs to be read.
         cur = self.cursor()
         cur.execute(query, params, 1)
         return cur
 
     def select(self, *args, **kwargs):
+        """Pythonic wrapper for selecting.
+
+        .. seealso:: :meth:`.Cursor.select` for parameters and examples.
+
+        """
         kwargs['_stack_depth'] = 1
         # No cursor context here since it needs to be read.
         cur = self.cursor()
         return cur.select(*args, **kwargs)
 
     def insert(self, *args, **kwargs):
+        """Pythonic wrapper for inserting.
+
+        .. seealso:: :meth:`.Cursor.insert` for parameters and examples.
+
+        """
         with self.cursor() as cur:
             return cur.insert(*args, **kwargs)
 
     def update(self, *args, **kwargs):
+        """Pythonic wrapper for updating.
+
+        .. seealso:: :meth:`.Cursor.update` for parameters and examples.
+
+        """
         kwargs['_stack_depth'] = 1
         with self.cursor() as cur:
             return cur.update(*args, **kwargs)

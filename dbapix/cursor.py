@@ -22,6 +22,7 @@ class Cursor(object):
         self.wrapped = raw
 
     def __getattr__(self, key):
+        """Attributes that are not provided by dbapix are passed through to the wrapped cursor."""
         return getattr(self.wrapped, key)
 
     def __enter__(self):
@@ -87,7 +88,21 @@ class Cursor(object):
     next = __next__
 
     def execute(self, query, params=None, _stack_depth=0):
+        """Execute a query.
 
+        :param str query: The SQL to execute.
+        :param params: A ``tuple``, ``dict``, or ``None``.
+        :param int _stack_depth: How many steps up the callchain to pull f-string-style
+            parameters from.
+        
+        .. testcode::
+
+            cur = con.execute('SELECT 1')
+            assert next(cur)[0] == 1
+
+        .. seealso:: :ref:`params` for a discussion of parameters binding.
+
+        """
         bound = bind(query, params, _stack_depth + 1)
         query, params = bound(self._engine)
         res = self.wrapped.execute(query, params)

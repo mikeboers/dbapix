@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-cd "${1-.}/_build/html"
+set -e
+
+cd "$(dirname "$0")/_build/html"
 
 if [[ ! -d .git ]]; then
     git init .

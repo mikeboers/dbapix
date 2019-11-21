@@ -44,6 +44,22 @@ Unsorted
 - Our own type registering system.
     - dbx.SQL('literal SQL')
 
+
+- Sqlite and Psycopg2 don't touch %s if args is None, but our handling of it
+  means that they might.
+
+  >>> cur.execute("select '%s'")
+  >>> list(cur)
+  [('%s',)]
+  >>> cur.execute("select '%s'", [1])
+  >>> list(cur)
+  [('1',)]
+  >>> cur.execute("select '%s'", [])
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+  IndexError: list index out of range
+
+
 Connection Management Confusion
 ===============================
 

@@ -1,5 +1,6 @@
-import os
 import functools
+import os
+import sys
 
 from unittest import TestCase
 from unittest.case import SkipTest
@@ -15,7 +16,7 @@ def needs_imports(*modules):
                 try:
                     __import__(mod, fromlist=[''])
                 except ImportError:
-                    raise SkipTest()
+                    raise SkipTest('needs {}'.format(', '.join(modules)))
             return func(*args, **kwargs)
         return _needs_imports
     return decorator

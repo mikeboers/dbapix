@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+source venv/bin/activate
+source env.sh
+
+python -m unittest || exit 1
+
+make -C docs doctest

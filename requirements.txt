@@ -1,0 +1,8 @@
+
+# For docs.
+sphinx
+
+# For testing.
+psycopg2-binary
+pymysql
+sshtunnel

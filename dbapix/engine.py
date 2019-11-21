@@ -65,7 +65,17 @@ class Engine(object):
         self.close()
 
     def get_connection(self, timeout=None, **kwargs):
-        
+        """Get an idle connection from the pool, or create a new one if nessesary.
+
+        The connection should be returned via :meth:`Engine.put_connection` or closed
+        via :meth:`.Connection.close`.
+
+        :param float timeout: Timeout for new connections. Default of ``None``
+            implies no timeout.
+        :param **kwargs: Passed to :meth:`.Connection.reset_session`.
+
+        """
+
         try:
             while True:
                 con = self.pool.pop(0)
@@ -79,7 +89,7 @@ class Engine(object):
         except IndexError:
             real_con = self._new_connection(timeout)
             con = self.connection_class(self, real_con)
-            con._fileno = con.fileno() # Postgres closses it.
+            con._fileno = con.fileno() # Postgres closes it.
 
         stack_depth = 1 + kwargs.pop('_stack_depth', 0)
 
@@ -117,6 +127,15 @@ class Engine(object):
         pass
 
     def put_connection(self, con, close=False, warn_status=True):
+        """Return a connection to the pool.
+
+        :param bool close: Should the connection be closed? If false, the
+            connection may still be closed due to the pool being too large,
+            or reasons defined by the connection's state.
+        :param bool warn_status: Should a warning log be emitted if the connection
+            is in a non-idle status.
+
+        """
 
         if con.closed:
             return
@@ -157,17 +176,48 @@ class Engine(object):
         self.put_connection(con)
 
     def connect(self, **kwargs):
+        """Get a context-managed :class:`.Connection`.
+
+        .. testcode::
+
+            with engine.connect() as con:
+                # Use the connection, and then it will be auto-returned.
+                cur = con.cursor()
+                cur.execute('SELECT * FROM foo')
+
+        """
         kwargs['_stack_depth'] = 1 + kwargs.get('_stack_depth', 0)
         con = self.get_connection(**kwargs)
         return self._build_context(con, con)
 
     def cursor(self, **kwargs):
+        """Get a context-managed :class:`.Cursor` (if you don't need the connection).
+
+        .. testcode::
+
+            with engine.cursor() as cur:
+                # Use the cursor, and then it will be auto-returned.
+                cur.execute('SELECT * FROM foo')
+
+        """
+
         kwargs['_stack_depth'] = 1 + kwargs.get('_stack_depth', 0)
         con = self.get_connection(**kwargs)
         cur = con.cursor()
         return self._build_context(con, cur)
 
     def execute(self, query, params=None):
+        """Execute a context-managed query (if you don't need the connection).
+
+        .. testcode::
+
+            with engine.execute('SELECT 1') as cur:
+                # Use the result, and then it will be auto-returned.
+                row = next(cur)
+
+        .. seealso:: :meth:`.Cursor.execute` for parameters.
+
+        """
         con = self.get_connection(_stack_depth=1)
         cur = con.cursor()
         cur.execute(query, params, 1)
@@ -175,12 +225,33 @@ class Engine(object):
 
     @classmethod
     def quote_identifier(cls, name):
+        """Escape a name for valid use as an identifier.
+    
+        E.g. for SQLite::
+
+            >>> engine.quote_identifier('hello world')
+            '"hello world"'
+
+        """
         return '"{}"'.format(name.replace('"', '""'))
 
     _types = {}
 
     @classmethod
     def adapt_type(cls, name):
+        """Convert a generic type name into this engine's version.
+
+        E.g. for SQLite::
+
+            >>> engine.adapt_type('SERIAL PRIMARY KEY')
+            'INTEGER PRIMARY KEY'
+
+        This is case insensitive, and passes through unknown type untouched::
+
+            >>> engine.adapt_type('unknown')
+            'unknown'
+
+        """
         return cls._types.get(name.lower(), name)
 
 

@@ -19,6 +19,9 @@ help:
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+touch:
+	find . -name *.rst | xargs touch
+
 open:
 	open $(BUILDDIR)/html/index.html
 
