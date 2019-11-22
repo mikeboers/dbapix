@@ -3,6 +3,7 @@ from . import *
 from dbapix import bind
 from dbapix.drivers.psycopg2 import Engine as Postgres
 from dbapix.drivers.sqlite3 import Engine as SQLite
+from dbapix.drivers.ctds import Engine as CTDS
 
 
 global_bar = 345
@@ -24,6 +25,10 @@ class TestFormatQuery(TestCase):
 
         q, p = bq(Postgres)
         self.assertEqual(q, 'SELECT * FROM "foo" WHERE id = %s')
+        self.assertEqual(p, [123])
+
+        q, p = bq(CTDS)
+        self.assertEqual(q, 'SELECT * FROM [foo] WHERE id = :0')
         self.assertEqual(p, [123])
 
         # Serial primary keys.
@@ -121,4 +126,8 @@ class TestFormatQuery(TestCase):
         bound = bind('SELECT {func:literal}()')
         q, p = bound()
         self.assertEqual(q, 'SELECT now()')
+
+    def test_partial_provided(self):
+        self.assertRaises(KeyError, bind, 'SELECT {foo}, {bar}', dict(foo=123))
+
         

@@ -1,47 +1,20 @@
 
-Unsorted
-========
-
 - mssql
   - python packages:
     - cTDS
+        con = ctds.connect('localhost', user='sa', password='dbapix1!', database='dbapix')
+      
     - pyodbc
   - running a test server:
     https://hub.docker.com/_/microsoft-mssql-server
 
+    docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=dbapix1!' -p 127.0.0.1:1433:1433 -d mcr.microsoft.com/mssql/server:2017-CU8-ubuntu
 
-- Don't allow `with con` at all; require `with con.begin()` so that:
-    1. autocommit is broken out of
-    2. you can't confuse the connection pooling with transactions.
-
-    with con:
-        # What is even happening here?
-
-    with con.begin()
-        # This is clear.
 
 - Standardize a few more things:
     
     con.isolation_level
     con.transaction_status
-
-- Query builders.
-
-    dbx.select('column', dbx.alias('count(1)', 'count'), from_='table').join('table2', on='some condition').where(dbx.or_('foo = {}', 1)).group_by('bar', 'desc')
-    dbx.upsert('table', dict(foo='new_value'), where='id = blah')
-    dbx.bind('a = {}', 'apple') for generic use around the place
-
-    foo = engine.table('foo')
-    con.execute(foo.select('bar', 'baz').where('id = {}', [123]))
-
-    # Implicitly bound.
-    con.table('foo').select('*').first()
-
-    This can be trouble with where parameters are bound from. We can choose
-    between parameters binding at execution, or immediately (which makes more
-    sense to me, but is harder).
-
-- Datetime and other parsing should be on by default for SQLite stuff.
 
 - Pull in con.tables(), con.columns(table), etc., from mmtransfer.
 
@@ -62,7 +35,6 @@ Unsorted
 - Our own type registering system.
     - dbx.SQL('literal SQL')
 
-
 - Sqlite and Psycopg2 don't touch %s if args is None, but our handling of it
   means that they might.
 
@@ -76,10 +48,6 @@ Unsorted
   Traceback (most recent call last):
     File "<stdin>", line 1, in <module>
   IndexError: list index out of range
-
-
-Connection Management Confusion
-===============================
 
 - `get_connection` vs `connect` is not clear, alternatives include:
     - `take_connection` vs `borrow_connection`

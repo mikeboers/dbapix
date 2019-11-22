@@ -105,6 +105,9 @@ class Cursor(object):
         """
         bound = bind(query, params, _stack_depth + 1)
         query, params = bound(self._engine)
+        
+        # print(query, params)
+
         res = self.wrapped.execute(query, params)
 
         self._field_names = []

@@ -1,0 +1,62 @@
+
+Query Builder
+=============
+
+q = db.table('foos').select('*').where(foo=123)[1:12]
+q = db.table('foos').select('*').where(db.c.foo == 123)
+
+table = db.table('foos')
+
+table.select().where(table.c.foo == 123)
+
+# Alias for self-referential joins.
+alias = table.alias()
+table.select().join(alias, on=alias.c.id == table.c.parent_id)
+
+# Can call `select` multiple times to add more fields to selection
+table.select('foo').select('bar')
+# is the same as:
+table.select('foo', 'bar')
+
+# Don't need to define column types. Use Pandas-like `str` and `dt` objects:
+table.c.foo.str.strip()
+table.c.bar.dt.year()
+
+
+What do we wrap:
+
+- Select
+- Join
+- Where
+- Order By
+- Group By
+- Having
+- CTEs?
+- String functions
+- Datetime functions
+
+
+How
+---
+
+- Dialects for different SQLs.
+- Most things boil down to `func` or `oper` or something.
+
+- bind parameters at method calls, and collect a series of BoundQuery parts. Then
+  have a iter_binds() on the top level that yields (sql, params) pairs that get
+  joined/extended together for the final query.
+
+- Schema object that is independant of the engines.
+    foo = schema.table('foo') # create it if missing
+    foo.c.id # create it if missing
+
+
+
+ORM
+---
+
+Foo = db.Model('foo',
+    db.Field('id', 'INTEGER'),
+    db.Field('value', 'TEXT', nullable=False)
+)
+

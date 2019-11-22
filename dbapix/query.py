@@ -35,8 +35,10 @@ class Literal(str):
 
 class Placeholder(str):
 
-    def __sql__(self, engine):
+    def __sql__(self, engine, index=0):
         if engine:
+            if engine.paramstyle == 'numeric':
+                return ':{}'.format(index)
             return engine.placeholder
         return self
 
@@ -101,7 +103,14 @@ class BoundQuery(object):
             if engine.paramstyle == 'format':
                 escape_placeholders = lambda x: x.replace('%', '%%')
 
+        param_index = 0
+
         for x in self.query_parts:
+
+            if isinstance(x, Placeholder):
+                out.append(x.__sql__(engine, param_index))
+                param_index += 1
+                continue
 
             sql_func = getattr(x, '__sql__', None)
             if sql_func:

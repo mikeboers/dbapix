@@ -3,6 +3,7 @@ from .query import bind
 
 generic_implementations = dict(
     mariadb=['mysqldb', 'pymysql'],
+    mssql=['ctds'],
     mysql=['mysqldb', 'pymysql'],
     postgres=['psycopg2'],
     postgresql=['psycopg2'],
