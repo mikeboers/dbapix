@@ -1,0 +1,108 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+
+  tests:
+
+    name: "tests"
+    runs-on: ubuntu-latest
+
+    services:
+
+      postgres:
+        image: postgres:10.8
+        env:
+          POSTGRES_USER: dbapix
+          POSTGRES_PASSWORD: dbapix
+          POSTGRES_DB: dbapix
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: MySQL
+        run: |
+          # Needs space between -u and root, but not -p and root.
+          sudo mysql -u root -proot <<EOF
+              create database dbapix;
+              create user dbapix@localhost identified by 'dbapix';
+              grant all on dbapix.* to dbapix@localhost;
+          EOF
+
+      - name: Postgres via SSH
+        run: |
+
+          docker run -d \
+            -e POSTGRES_USER=dbapixssh \
+            -e POSTGRES_PASSWORD=dbapixssh \
+            -e POSTGRES_DB=dbapixssh \
+            --name sshtest \
+            -p 10022:22 \
+            postgres:10.8
+
+          docker exec -i sshtest bash <<EOF
+            set -e
+            apt-get update
+            apt-get install -y openssh-server
+            echo PermitRootLogin yes >> /etc/ssh/sshd_config
+            service ssh start
+            echo -e 'sshpassword\nsshpassword' | passwd root
+          EOF
+
+          mkdir -p ~/.ssh
+          cat >> ~/.ssh/config <<EOF
+          UserKnownHostsFile /dev/null
+          StrictHostKeyChecking no
+          EOF
+
+      - name: Packages
+        run: |
+
+          pip install -U pip setuptools
+          pip install -r requirements.txt
+
+      - name: Test
+        env:
+
+            DBAPIX_TEST_PSYCOPG2_USER: dbapix
+            DBAPIX_TEST_PSYCOPG2_PASSWORD: dbapix
+            DBAPIX_TEST_PSYCOPG2_DATABASE: dbapix
+
+            DBAPIX_TEST_PYMYSQL_USER: dbapix
+            DBAPIX_TEST_PYMYSQL_PASSWORD: dbapix
+            DBAPIX_TEST_PYMYSQL_DATABASE: dbapix
+
+            DBAPIX_TEST_MYSQLDB_USER: dbapix
+            DBAPIX_TEST_MYSQLDB_PASSWORD: dbapix
+            DBAPIX_TEST_MYSQLDB_DATABASE: dbapix
+
+            DBAPIX_TEST_TUNNEL_SSH_HOST: localhost
+            DBAPIX_TEST_TUNNEL_SSH_PORT: "10022"
+            DBAPIX_TEST_TUNNEL_SSH_USERNAME: root
+            DBAPIX_TEST_TUNNEL_SSH_PASSWORD: sshpassword
+            DBAPIX_TEST_TUNNEL_CON_USER: dbapixssh
+            DBAPIX_TEST_TUNNEL_CON_PASSWORD: dbapixssh
+            DBAPIX_TEST_TUNNEL_CON_DATABASE: dbapixssh
+
+        run: |
+          python -m unittest -v
+
+      - name: Doctest
+        run: |
+          make -C docs doctest
+
+

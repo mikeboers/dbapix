@@ -311,7 +311,12 @@ class SocketEngine(Engine):
         self.connect_kwargs = connect_kwargs or kwargs
 
         if isinstance(tunnel, dict):
-            self.tunnel_kwargs = tunnel
+            self.tunnel_kwargs = tunnel.copy()
+            for key in ('username', 'password'):
+                try:
+                    self.tunnel_kwargs['ssh_' + key] = self.tunnel_kwargs.pop(key)
+                except KeyError:
+                    pass
             self.tunnel = None
         else:
             self.tunnel_kwargs = None
@@ -344,7 +349,6 @@ class SocketEngine(Engine):
                 host = self.tunnel_kwargs.pop('remote_bind_host', '127.0.0.1')
                 port = self.connect_kwargs.pop('port', self.default_port)
                 self.tunnel_kwargs['remote_bind_address'] = (host, port)
-
 
             from sshtunnel import SSHTunnelForwarder
             self.tunnel = SSHTunnelForwarder(**self.tunnel_kwargs)

@@ -11,6 +11,7 @@ from .test_driver_generic import GenericTestMixin
 def create_tunnel_engine():
     kwargs = get_environ_subset('DBAPIX_TEST_TUNNEL_CON')
     tunnel = get_environ_subset('DBAPIX_TEST_TUNNEL_SSH')
+    tunnel['port'] = int(tunnel.get('port', 22))
     kwargs.setdefault('host', 'localhost')
     kwargs.setdefault('database', 'dbapix')
     return create_engine('psycopg2', kwargs, tunnel)
