@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Connections &#8212; dbapix 0.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>Connections &#8212; dbapix 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Cursors" href="cursor.html" />
@@ -30,7 +29,7 @@
         <li class="right" >
           <a href="engine.html" title="Engines"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">dbapix 0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">dbapix 2.0.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -43,34 +42,117 @@
 <h1>Connections<a class="headerlink" href="#connections" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="dbapix.connection.Connection">
-<em class="property">class </em><code class="descclassname">dbapix.connection.</code><code class="descname">Connection</code><span class="sig-paren">(</span><em>engine</em>, <em>con</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">class </em><code class="sig-prename descclassname">dbapix.connection.</code><code class="sig-name descname">Connection</code><span class="sig-paren">(</span><em class="sig-param">engine</em>, <em class="sig-param">con</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>A normalized connection to a database.</p>
+<p>See <a class="reference external" href="https://www.python.org/dev/peps/pep-0249/#connection-objects">the DB-API 2.0 specs</a>
+for the minimal methods provided there.</p>
+</dd></dl>
 
-<div class="section" id="transactions">
-<h2>Transactions<a class="headerlink" href="#transactions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cursors-and-convenience">
+<h2>Cursors and Convenience<a class="headerlink" href="#cursors-and-convenience" title="Permalink to this headline">¶</a></h2>
 <dl class="method">
-<dt id="dbapix.connection.Connection.begin">
-<code class="descclassname">Connection.</code><code class="descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.begin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assert that we are or will be in a transaction.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">con</span><span class="o">.</span><span class="n">begin</span><span class="p">()</span>
-    <span class="k">pass</span>
-
-<span class="c1"># or</span>
-
-<span class="n">con</span><span class="o">.</span><span class="n">begin</span><span class="p">()</span>
-<span class="k">pass</span>
-<span class="n">con</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<dt id="dbapix.connection.Connection.cursor">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">cursor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.cursor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.cursor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a <a class="reference internal" href="cursor.html#dbapix.cursor.Cursor" title="dbapix.cursor.Cursor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cursor</span></code></a> for this connection.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SELECT 1&#39;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">next</span><span class="p">(</span><span class="n">cur</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
 </pre></div>
 </div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A context manager that will automatically
-rollback or commit the current transaction.</td>
-</tr>
-</tbody>
-</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.execute">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param">query</em>, <em class="sig-param">params=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a cursor, and execute a query on it in one step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The created <a class="reference internal" href="cursor.html#dbapix.cursor.Cursor" title="dbapix.cursor.Cursor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cursor</span></code></a>.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="cursor.html#dbapix.cursor.Cursor.execute" title="dbapix.cursor.Cursor.execute"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Cursor.execute()</span></code></a> for parameters and examples.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.select">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">select</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.select"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.select" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pythonic wrapper for selecting.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="cursor.html#dbapix.cursor.Cursor.select" title="dbapix.cursor.Cursor.select"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Cursor.select()</span></code></a> for parameters and examples.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.insert">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">insert</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pythonic wrapper for inserting.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="cursor.html#dbapix.cursor.Cursor.insert" title="dbapix.cursor.Cursor.insert"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Cursor.insert()</span></code></a> for parameters and examples.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.update">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pythonic wrapper for updating.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="cursor.html#dbapix.cursor.Cursor.update" title="dbapix.cursor.Cursor.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Cursor.update()</span></code></a> for parameters and examples.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="transactions">
+<h2>Transactions<a class="headerlink" href="#transactions" title="Permalink to this headline">¶</a></h2>
+<p>Transaction management is one of the larger normalization efforts of dbapix.</p>
+<p>Connections start in “autocommit” mode (and can be inspected by <a class="reference internal" href="#dbapix.connection.Connection.autocommit" title="dbapix.connection.Connection.autocommit"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Connection.autocommit</span></code></a>).
+When in autocommit, the connection behaves as if it automatically commits after every query; your changes are immediately reflected in the database and availible to other connections.</p>
+<p>When not in autocommit, the connection ensures it is in a transaction before
+executing a query, and the user must call <a class="reference internal" href="#dbapix.connection.Connection.commit" title="dbapix.connection.Connection.commit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Connection.commit()</span></code></a> for changes
+to be reflected in the database (or may call <a class="reference internal" href="#dbapix.connection.Connection.rollback" title="dbapix.connection.Connection.rollback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Connection.rollback()</span></code></a> to rollback).</p>
+<p>Regardless of the state of autocommit, you can enter a transaction by using
+the connection as a context manager, or calling <a class="reference internal" href="#dbapix.connection.Connection.begin" title="dbapix.connection.Connection.begin"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Connection.begin()</span></code></a>. Autocommit
+is restored after the transaction if it was set before.</p>
+<p>You can use a connection as a context manager to implicitly
+<a class="reference internal" href="#dbapix.connection.Connection.begin" title="dbapix.connection.Connection.begin"><code class="xref py py-meth docutils literal notranslate"><span class="pre">begin()</span></code></a>/<a class="reference internal" href="#dbapix.connection.Connection.commit" title="dbapix.connection.Connection.commit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">commit()</span></code></a>/<a class="reference internal" href="#dbapix.connection.Connection.rollback" title="dbapix.connection.Connection.rollback"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rollback()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">con</span><span class="p">:</span>
+    <span class="c1"># Do stuff.</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>or you can call the methods explicitly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">con</span><span class="o">.</span><span class="n">begin</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Do stuff.</span>
+    <span class="k">pass</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">con</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">con</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="dbapix.connection.Connection.autocommit">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">autocommit</code><a class="headerlink" href="#dbapix.connection.Connection.autocommit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is every query executed in an implicit transaction that is auto committed?</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code> on new connections.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.begin">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.begin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assert that we are or will be in a transaction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A context manager that will automatically
+rollback or commit the current transaction.</p>
+</dd>
+</dl>
 <p>If it can be avoided, this does not actually start a transaction,
 but instead asserts that the connection is not in autocommit mode.
 If autocommit cannot be disabled, then an explicit <code class="docutils literal notranslate"><span class="pre">BEGIN</span></code>
@@ -81,13 +163,61 @@ it’s value when <a class="reference internal" href="#dbapix.connection.Connect
 
 <dl class="method">
 <dt id="dbapix.connection.Connection.commit">
-<code class="descclassname">Connection.</code><code class="descname">commit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.commit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.commit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">commit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.commit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commit changes made since the transaction started.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="dbapix.connection.Connection.rollback">
-<code class="descclassname">Connection.</code><code class="descname">rollback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.rollback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.rollback" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">rollback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.rollback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.rollback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rollback changes made since the transaction started.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="session">
+<h2>Session<a class="headerlink" href="#session" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="dbapix.connection.Connection.closed">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">closed</code><a class="headerlink" href="#dbapix.connection.Connection.closed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Has this connection been closed?</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.close">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the connection immediately.</p>
+<p>This prevents the engine from reusing connections, and so is discouraged
+unless you are sure the connection should not be reused.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.reset_session">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">reset_session</code><span class="sig-paren">(</span><em class="sig-param">autocommit=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.reset_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.reset_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the connection to an initial clean state.</p>
+<p>This is automatically called when connections are retreived from an engine,
+and is designed so that every connection feels like a new one, even
+though they are reused.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.fileno">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">fileno</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.fileno"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.fileno" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</div>
+<div class="section" id="wrapped">
+<h2>Wrapped<a class="headerlink" href="#wrapped" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="dbapix.connection.Connection.wrapped">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">wrapped</code><a class="headerlink" href="#dbapix.connection.Connection.wrapped" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the underlying DB-API2 connection object, in case you need to access it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dbapix.connection.Connection.__getattr__">
+<code class="sig-prename descclassname">Connection.</code><code class="sig-name descname">__getattr__</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/dbapix/connection.html#Connection.__getattr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dbapix.connection.Connection.__getattr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attributes that are not provided by dbapix are passed through to the wrapped connection.</p>
+</dd></dl>
 
 </div>
 </div>
@@ -98,10 +228,13 @@ it’s value when <a class="reference internal" href="#dbapix.connection.Connect
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Connections</a><ul>
+<li><a class="reference internal" href="#cursors-and-convenience">Cursors and Convenience</a></li>
 <li><a class="reference internal" href="#transactions">Transactions</a></li>
+<li><a class="reference internal" href="#session">Session</a></li>
+<li><a class="reference internal" href="#wrapped">Wrapped</a></li>
 </ul>
 </li>
 </ul>
@@ -120,13 +253,11 @@ it’s value when <a class="reference internal" href="#dbapix.connection.Connect
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -147,12 +278,12 @@ it’s value when <a class="reference internal" href="#dbapix.connection.Connect
         <li class="right" >
           <a href="engine.html" title="Engines"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">dbapix 0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">dbapix 2.0.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, Mike Boers.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.8.
+        &#169; Copyright 2020, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
     </div>
   </body>
 </html>

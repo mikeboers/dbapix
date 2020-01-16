@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>dbapix.engine &#8212; dbapix 0.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>dbapix.engine &#8212; dbapix 2.0.0 documentation</title>
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
@@ -22,7 +21,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">dbapix 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">dbapix 2.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="../dbapix.html" accesskey="U">dbapix</a> &#187;</li> 
       </ul>
@@ -34,13 +33,15 @@
           <div class="body" role="main">
             
   <h1>Source code for dbapix.engine</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">atexit</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">weakref</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">abc</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
 
 <span class="kn">import</span> <span class="nn">six</span>
 
@@ -62,8 +63,8 @@
 <span class="sd">    we support. You don&#39;t create engines directly, but rather through</span>
 <span class="sd">    :func:`.create_engine`.</span>
 
-<span class="sd">    In general, you create the engine with whatever parameters you would pass to the</span>
-<span class="sd">    connect function of the underlying driver, e.g.::</span>
+<span class="sd">    In general, you create the engine with whatever args/kwargs you would pass</span>
+<span class="sd">    to the connect function of the underlying driver, e.g.::</span>
 
 <span class="sd">        engine = create_engine(&#39;sqlite&#39;, &#39;path/to/database.sqlite&#39;)</span>
 
@@ -99,7 +100,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Engine.get_connection"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.get_connection">[docs]</a>    <span class="k">def</span> <span class="nf">get_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        
+        <span class="sd">&quot;&quot;&quot;Get an idle connection from the pool, or create a new one if nessesary.</span>
+
+<span class="sd">        The connection should be returned via :meth:`Engine.put_connection` or closed</span>
+<span class="sd">        via :meth:`.Connection.close`.</span>
+
+<span class="sd">        :param float timeout: Timeout for new connections. Default of ``None``</span>
+<span class="sd">            implies no timeout.</span>
+<span class="sd">        :param ``**kwargs``: Passed to :meth:`.Connection.reset_session`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="n">con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -113,12 +124,12 @@
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="n">real_con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_connection</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
             <span class="n">con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_con</span><span class="p">)</span>
-            <span class="n">con</span><span class="o">.</span><span class="n">_fileno</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span> <span class="c1"># Postgres closses it.</span>
+            <span class="n">con</span><span class="o">.</span><span class="n">_fileno</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span> <span class="c1"># Postgres closes it.</span>
 
         <span class="n">stack_depth</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_stack_depth&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_checked_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">con</span><span class="p">)</span>
-        <span class="n">con</span><span class="o">.</span><span class="n">_reset_session</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">con</span><span class="o">.</span><span class="n">reset_session</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Store where it came from so we can warn later.</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="n">stack_depth</span><span class="p">)</span>
@@ -151,6 +162,15 @@
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="Engine.put_connection"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.put_connection">[docs]</a>    <span class="k">def</span> <span class="nf">put_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">con</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">warn_status</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a connection to the pool.</span>
+
+<span class="sd">        :param bool close: Should the connection be closed? If false, the</span>
+<span class="sd">            connection may still be closed due to the pool being too large,</span>
+<span class="sd">            or reasons defined by the connection&#39;s state.</span>
+<span class="sd">        :param bool warn_status: Should a warning log be emitted if the connection</span>
+<span class="sd">            is in a non-idle status.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">con</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
             <span class="k">return</span>
@@ -190,33 +210,94 @@
         <span class="n">con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_refs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">put_connection</span><span class="p">(</span><span class="n">con</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Engine.connect"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Engine.connect"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a context-managed :class:`.Connection`.</span>
+
+<span class="sd">        .. testcode::</span>
+
+<span class="sd">            with engine.connect() as con:</span>
+<span class="sd">                # Use the connection, and then it will be auto-returned.</span>
+<span class="sd">                cur = con.cursor()</span>
+<span class="sd">                cur.execute(&#39;SELECT * FROM foo&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;_stack_depth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_stack_depth&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_context</span><span class="p">(</span><span class="n">con</span><span class="p">,</span> <span class="n">con</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Engine.cursor"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.cursor">[docs]</a>    <span class="k">def</span> <span class="nf">cursor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Engine.cursor"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.cursor">[docs]</a>    <span class="k">def</span> <span class="nf">cursor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a context-managed :class:`.Cursor` (if you don&#39;t need the connection).</span>
+
+<span class="sd">        .. testcode::</span>
+
+<span class="sd">            with engine.cursor() as cur:</span>
+<span class="sd">                # Use the cursor, and then it will be auto-returned.</span>
+<span class="sd">                cur.execute(&#39;SELECT * FROM foo&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;_stack_depth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_stack_depth&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_context</span><span class="p">(</span><span class="n">con</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Engine.execute"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute a context-managed query (if you don&#39;t need the connection).</span>
+
+<span class="sd">        .. testcode::</span>
+
+<span class="sd">            with engine.execute(&#39;SELECT 1&#39;) as cur:</span>
+<span class="sd">                # Use the result, and then it will be auto-returned.</span>
+<span class="sd">                row = next(cur)</span>
+
+<span class="sd">        .. seealso:: :meth:`.Cursor.execute` for parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">con</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="n">_stack_depth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
         <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_context</span><span class="p">(</span><span class="n">con</span><span class="p">,</span> <span class="n">cur</span><span class="p">)</span></div>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_quote_identifier</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="c1"># This is valid for sqlite3 and psycopg2.</span>
-        <span class="k">return</span> <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;&quot;&#39;</span><span class="p">))</span>
+<div class="viewcode-block" id="Engine.quote_identifier"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.quote_identifier">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">quote_identifier</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Escape a name for valid use as an identifier.</span>
+<span class="sd">    </span>
+<span class="sd">        E.g. for SQLite::</span>
+
+<span class="sd">            &gt;&gt;&gt; engine.quote_identifier(&#39;hello world&#39;)</span>
+<span class="sd">            &#39;&quot;hello world&quot;&#39;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;&quot;&#39;</span><span class="p">))</span></div>
 
     <span class="n">_types</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_adapt_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Engine.adapt_type"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.Engine.adapt_type">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">adapt_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a generic type name into this engine&#39;s version.</span>
+
+<span class="sd">        E.g. for SQLite::</span>
+
+<span class="sd">            &gt;&gt;&gt; engine.adapt_type(&#39;SERIAL PRIMARY KEY&#39;)</span>
+<span class="sd">            &#39;INTEGER PRIMARY KEY&#39;</span>
+
+<span class="sd">        This is case insensitive, and passes through unknown type untouched::</span>
+
+<span class="sd">            &gt;&gt;&gt; engine.adapt_type(&#39;unknown&#39;)</span>
+<span class="sd">            &#39;unknown&#39;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># We need to hold onto open tunnels so we can force them</span>
+<span class="c1"># to close at shutdown.</span>
+<span class="n">_close_at_exit</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">WeakSet</span><span class="p">()</span>
+
+<span class="nd">@atexit</span><span class="o">.</span><span class="n">register</span>
+<span class="k">def</span> <span class="nf">_do_close_at_exit</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">_close_at_exit</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="SocketEngine"><a class="viewcode-back" href="../../api/engine.html#dbapix.engine.SocketEngine">[docs]</a><span class="k">class</span> <span class="nc">SocketEngine</span><span class="p">(</span><span class="n">Engine</span><span class="p">):</span>
@@ -265,7 +346,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">connect_kwargs</span> <span class="o">=</span> <span class="n">connect_kwargs</span> <span class="ow">or</span> <span class="n">kwargs</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tunnel</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span> <span class="o">=</span> <span class="n">tunnel</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span> <span class="o">=</span> <span class="n">tunnel</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="p">[</span><span class="s1">&#39;ssh_&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">pass</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span> <span class="o">=</span> <span class="kc">None</span>
@@ -299,15 +385,17 @@
                 <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_port</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="p">[</span><span class="s1">&#39;remote_bind_address&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
 
-
             <span class="kn">from</span> <span class="nn">sshtunnel</span> <span class="k">import</span> <span class="n">SSHTunnelForwarder</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span> <span class="o">=</span> <span class="n">SSHTunnelForwarder</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">tunnel_kwargs</span><span class="p">)</span>
 
-            <span class="c1"># Force them to die at exit. Not entirely sure if both are nessesary.</span>
+            <span class="c1"># Force them to die at exit. Not sure all of this is nessesary.</span>
             <span class="c1"># On only some hosts these threads remain open and blocking.</span>
-            <span class="c1"># TODO: Figure out why this is nessesary for some hosts at all.</span>
+            <span class="c1"># In theory setting the daemon_* attributes should be enough,</span>
+            <span class="c1"># but there is at least one host where we need to explicitly</span>
+            <span class="c1"># close everything down, hence the atexit stuff.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="o">.</span><span class="n">daemon_forward_servers</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="o">.</span><span class="n">daemon_transport</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">_close_at_exit</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">tunnel</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
@@ -360,13 +448,11 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -381,14 +467,14 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">dbapix 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">dbapix 2.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="../dbapix.html" >dbapix</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, Mike Boers.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.8.
+        &#169; Copyright 2020, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
     </div>
   </body>
 </html>

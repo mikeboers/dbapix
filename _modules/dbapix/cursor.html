@@ -1,18 +1,17 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>dbapix.cursor &#8212; dbapix 0.1 documentation</title>
+    <meta charset="utf-8" />
+    <title>dbapix.cursor &#8212; dbapix 2.0.0 documentation</title>
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
@@ -22,7 +21,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">dbapix 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">dbapix 2.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="../dbapix.html" accesskey="U">dbapix</a> &#187;</li> 
       </ul>
@@ -57,8 +56,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span> <span class="o">=</span> <span class="n">engine</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wrapped</span> <span class="o">=</span> <span class="n">raw</span>
 
-    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+<div class="viewcode-block" id="Cursor.__getattr__"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.__getattr__">[docs]</a>    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Attributes that are not provided by dbapix are passed through to the wrapped cursor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
@@ -123,7 +123,21 @@
     <span class="nb">next</span> <span class="o">=</span> <span class="fm">__next__</span>
 
 <div class="viewcode-block" id="Cursor.execute"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute a query.</span>
 
+<span class="sd">        :param str query: The SQL to execute.</span>
+<span class="sd">        :param params: A ``tuple``, ``dict``, or ``None``.</span>
+<span class="sd">        :param int _stack_depth: How many steps up the callchain to pull f-string-style</span>
+<span class="sd">            parameters from.</span>
+<span class="sd">        </span>
+<span class="sd">        .. testcode::</span>
+
+<span class="sd">            cur = con.execute(&#39;SELECT 1&#39;)</span>
+<span class="sd">            assert next(cur)[0] == 1</span>
+
+<span class="sd">        .. seealso:: :ref:`params` for a discussion of parameters binding.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">bound</span> <span class="o">=</span> <span class="n">bind</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">_stack_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">query</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">bound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrapped</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
@@ -136,16 +150,16 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">returning</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Cursor.insert"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">returning</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
-        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;INSERT INTO </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">table_name</span><span class="p">)]</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;INSERT INTO </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">quote_identifier</span><span class="p">(</span><span class="n">table_name</span><span class="p">)]</span>
 
         <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">placeholders</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">quote_identifier</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
             <span class="n">placeholders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
@@ -155,27 +169,27 @@
         <span class="p">))</span>
 
         <span class="k">if</span> <span class="n">returning</span><span class="p">:</span>
-            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;RETURNING </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">returning</span><span class="p">)))</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;RETURNING </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">quote_identifier</span><span class="p">(</span><span class="n">returning</span><span class="p">)))</span>
 
         <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">returning</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">where_params</span><span class="o">=</span><span class="p">(),</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="Cursor.update"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">where_params</span><span class="o">=</span><span class="p">(),</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 
         <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">params</span> <span class="o">=</span> <span class="n">Params</span><span class="p">()</span> <span class="k">if</span> <span class="n">where_params</span> <span class="k">else</span> <span class="n">Params</span><span class="o">.</span><span class="n">from_stack</span><span class="p">(</span><span class="n">_stack_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="n">to_set</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="n">to_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> = {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">key</span><span class="p">)))</span>
+            <span class="n">to_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> = {{}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">quote_identifier</span><span class="p">(</span><span class="n">key</span><span class="p">)))</span>
             <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
         <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s1">&#39;UPDATE&#39;</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_quote_identifier</span><span class="p">(</span><span class="n">table_name</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">quote_identifier</span><span class="p">(</span><span class="n">table_name</span><span class="p">),</span>
             <span class="s1">&#39;SET&#39;</span><span class="p">,</span>
             <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_set</span><span class="p">),</span>
             <span class="s1">&#39;WHERE&#39;</span><span class="p">,</span>
@@ -188,7 +202,9 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">where_params</span><span class="o">=</span><span class="p">(),</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Cursor.select"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.select">[docs]</a>    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">where_params</span><span class="o">=</span><span class="p">(),</span> <span class="n">_stack_depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 
         <span class="c1"># TODO: How to escape this but allow the selectable to contain a</span>
         <span class="c1"># join, and for the fields to contain dots?</span>
@@ -196,7 +212,7 @@
             <span class="s1">&#39;SELECT&#39;</span><span class="p">,</span>
             <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields</span><span class="p">),</span>
             <span class="s1">&#39;FROM&#39;</span><span class="p">,</span>
-            <span class="n">table_name</span><span class="p">,</span> <span class="c1">#self._engine._quote_identifier(table_name),</span>
+            <span class="n">table_name</span><span class="p">,</span> <span class="c1">#self._engine.quote_identifier(table_name),</span>
         <span class="p">]</span>
 
         <span class="k">if</span> <span class="n">where</span><span class="p">:</span>
@@ -206,7 +222,7 @@
         <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">where_params</span><span class="p">,</span> <span class="n">_stack_depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="Cursor.as_dataframe"><a class="viewcode-back" href="../../api/cursor.html#dbapix.cursor.Cursor.as_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Fetch all (remaining) rows as a ``pandas.DataFrame``.</span>
@@ -241,13 +257,11 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -262,14 +276,14 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">dbapix 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">dbapix 2.0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="../dbapix.html" >dbapix</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, Mike Boers.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.8.
+        &#169; Copyright 2020, Mike Boers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
     </div>
   </body>
 </html>
