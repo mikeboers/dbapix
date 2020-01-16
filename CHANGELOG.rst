@@ -5,8 +5,8 @@ We are operating with `semantic versioning <http://semver.org>`_.
 
 
 
-v2.0.0.dev0
------------
+v2.0.0
+------
 
 Major:
 
