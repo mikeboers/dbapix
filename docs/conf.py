@@ -14,19 +14,17 @@
 #
 import os
 import sys
+import datetime
 sys.path.append(os.path.abspath(os.path.join(__file__, '..', '..')))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'dbapix'
-copyright = '2018, Mike Boers'
+copyright = '{}, Mike Boers'.format(datetime.datetime.utcnow().year)
 author = 'Mike Boers'
 
-# The short X.Y version
-version = '0.1'
-# The full version, including alpha/beta/rc tags
-release = '0.1'
+release = version = '2.0.0'
 
 
 # -- General configuration ---------------------------------------------------

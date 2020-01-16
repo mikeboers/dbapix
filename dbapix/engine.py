@@ -72,7 +72,7 @@ class Engine(object):
 
         :param float timeout: Timeout for new connections. Default of ``None``
             implies no timeout.
-        :param **kwargs: Passed to :meth:`.Connection.reset_session`.
+        :param ``**kwargs``: Passed to :meth:`.Connection.reset_session`.
 
         """
 
